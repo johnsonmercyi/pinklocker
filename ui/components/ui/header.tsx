@@ -9,14 +9,21 @@ import DropdownHelp from '@/components/dropdown-help'
 import ThemeToggle from '@/components/theme-toggle'
 import DropdownProfile from '@/components/dropdown-profile'
 import { ConnectWalletButton } from '../connect-wallet-button/connect-wallet-button'
+import { useWeb3Modal } from '@web3modal/ethers/react'
 
 export default function Header() {
+
+  const { open } = useWeb3Modal();
 
   const { sidebarOpen, setSidebarOpen } = useAppProvider()
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false)
 
   const connectWalletHandler = () => {
-    alert("Connnecting wallet...");
+    try {
+      open();
+    } catch(error) {
+      console.log(error);
+    }
   }
 
   return (

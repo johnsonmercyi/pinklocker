@@ -34,23 +34,23 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
 
   return (
     <tr>
-      {/* <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
-        <div className="flex items-center">
-          <label className="inline-flex">
-            <span className="sr-only">Select</span>
-            <input className="form-checkbox" type="checkbox" onChange={handleCheckboxChange} checked={isSelected} />
-          </label>
-        </div>
-      </td> */}
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap md:w-1/2">
         <div className="flex items-center">
           <div className="w-9 h-9 shrink-0 mr-2 sm:mr-3">
             <button onClick={(e) => handleTransactionClick(e)} tabIndex={-1}>
-              <Image className="rounded-full" src={transaction.image} width={36} height={36} alt={transaction.name} />
+              <Image
+                className="rounded-full"
+                src={transaction.image}
+                width={36}
+                height={36}
+                alt={transaction.name}
+              />
             </button>
           </div>
           <div className="font-medium text-slate-800 dark:text-slate-100">
-            <button onClick={(e) => handleTransactionClick(e)}>{transaction.name}</button>
+            <button onClick={(e) => handleTransactionClick(e)}>
+              {transaction.name}
+            </button>
           </div>
         </div>
       </td>
@@ -59,12 +59,32 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
       </td>
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
         <div className="text-left">
-          <div className={`text-xs inline-flex font-medium rounded-full text-center px-2.5 py-1 ${statusColor(transaction.status)}`}>{transaction.status}</div>
+          <div
+            className={`text-xs inline-flex font-medium rounded-full text-center px-2.5 py-1 ${statusColor(
+              transaction.status
+            )}`}
+          >
+            {transaction.status}
+          </div>
         </div>
       </td>
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
-        <div className={`text-right font-medium ${amountColor(transaction.amount)}`}>{transaction.amount}</div>
+        <div
+          className={`text-right font-medium ${amountColor(
+            transaction.amount
+          )}`}
+        >
+          {transaction.amount}
+        </div>
+      </td>
+
+      <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
+        <div className="flex items-center">
+          <div className="font-normal text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300">
+            <button onClick={(e) => handleTransactionClick(e)}>View Details</button>
+          </div>
+        </div>
       </td>
     </tr>
-  )
+  );
 }
