@@ -57,7 +57,7 @@ export const useWallet = () => {
 
   if (!context) {
     throw new Error(
-      "useWalletContext must be used within a ValidateWalletConnect component"
+      "useWallet must be used within a ValidateWalletConnect component"
     );
   }
 

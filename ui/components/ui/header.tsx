@@ -24,7 +24,7 @@ export default function Header() {
 
   useEffect(() => {
     setWalletConnected(isConnected);
-  }, [isConnected]);
+  }, [isConnected, walletConnected]);
 
   const connectWalletHandler = () => {
     try {
