@@ -10,10 +10,13 @@ import ThemeToggle from '@/components/theme-toggle'
 import DropdownProfile from '@/components/dropdown-profile'
 import { ConnectWalletButton } from '../connect-wallet-button/connect-wallet-button'
 import { useWeb3Modal } from '@web3modal/ethers/react'
+import { useWalletContext } from '@/app/(default)/tokens/config/ValidateWalletConnection'
+import ConnectedWalletButton from '../ConnectedWalletButton/ConnectedWalletButton'
 
 export default function Header() {
 
   const { open } = useWeb3Modal();
+  const { address, isConnected } = useWalletContext();
 
   const { sidebarOpen, setSidebarOpen } = useAppProvider()
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false)
@@ -62,9 +65,14 @@ export default function Header() {
             <hr className="w-px h-6 bg-slate-200 dark:bg-slate-700 border-none" />
 
             {/* Connection */}
-            <ConnectWalletButton
-              text="Connect"
-              onClickHandler={connectWalletHandler} />
+            {isConnected ? (
+              <ConnectedWalletButton address={address} balance={0} initials='NNN'/>
+            ) : (
+              <ConnectWalletButton
+                text="Connect"
+                onClickHandler={connectWalletHandler}
+              />
+            )}
           </div>
         </div>
       </div>

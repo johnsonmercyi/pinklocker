@@ -1,4 +1,4 @@
-import { Icons } from "../utils/utility";
+import { Icon } from "../utils/utility";
 
 export const ConnectWalletButton = ({
   text,
@@ -12,7 +12,7 @@ export const ConnectWalletButton = ({
       onClick={onClickHandler}
       className="btn bg-indigo-500 hover:bg-indigo-600 text-white"
     >
-      <Icons.Wallet stroke="rgba(255, 255, 255, 0.5)" />
+      <Icon name="wallet" stroke="rgba(255, 255, 255, 0.5)" />
       <span className="hidden xs:block ml-2">{text}</span>
     </button>
   );
