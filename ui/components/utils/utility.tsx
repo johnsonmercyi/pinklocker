@@ -13,6 +13,7 @@ export const Icon = ({
   height?: string;
   className?: string | undefined;
 }) => {
+  
   const icons = {
     wallet: (
       <div className={className || ""}>
