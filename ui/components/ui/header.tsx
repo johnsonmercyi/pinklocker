@@ -10,12 +10,12 @@ import ThemeToggle from "@/components/theme-toggle";
 import DropdownProfile from "@/components/dropdown-profile";
 import { ConnectWalletButton } from "../connect-wallet-button/connect-wallet-button";
 import { useWeb3Modal } from "@web3modal/ethers/react";
-import { useWalletContext } from "@/app/(default)/tokens/config/ValidateWalletConnection";
+import { useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
 import ConnectedWalletButton from "../ConnectedWalletButton/ConnectedWalletButton";
 
 export default function Header() {
   const { open } = useWeb3Modal();
-  const { address, isConnected, balance, networkSymbol } = useWalletContext();
+  const { address, isConnected, balance, networkSymbol } = useWallet();
   console.log("Balance: ", balance);
 
   const { sidebarOpen, setSidebarOpen } = useAppProvider();

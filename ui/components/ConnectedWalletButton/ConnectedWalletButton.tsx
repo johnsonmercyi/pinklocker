@@ -1,4 +1,4 @@
-import { useWalletContext } from "@/app/(default)/tokens/config/ValidateWalletConnection";
+import { useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
 import { Icon } from "../utils/utility";
 import styles from "./styles.module.css";
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ const ConnectedWalletButton = ({
   symbol: string | undefined;
   onClickHandler: () => void;
 }) => {
-  const { chainId } = useWalletContext();
+  const { chainId } = useWallet();
   const [isValidChain, setIsValidChain] = useState<boolean>(false);
 
   useEffect(() => {

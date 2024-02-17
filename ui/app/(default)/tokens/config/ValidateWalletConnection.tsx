@@ -52,7 +52,7 @@ export const ValidateWalletConnect = ({
   );
 };
 
-export const useWalletContext = () => {
+export const useWallet = () => {
   const context = useContext(WalletContext);
 
   if (!context) {
