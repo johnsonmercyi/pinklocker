@@ -1,9 +1,89 @@
 /*Mobile First Style*/
 .main {
-  
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius   : 10rem;
+
+  padding: 0.35rem;
+
+  display        : flex;
+  justify-content: center;
+  align-items    : center;
+
+  cursor: pointer;
+
+  transition: all 0.3s ease-in-out;
+
+}
+
+.main:hover {
+  background-color: rgb(52 211 153 / 0.3);
+}
+
+.walletDetails {
+  display        : flex;
+  flex-direction : column;
+  justify-content: center;
+  align-items    : center;
+}
+
+.walletDetails .address {
+  display: none;
+}
+
+.walletDetails .balance {
+  display: none;
+}
+
+.invalidNet {
+  width: 100%;
+
+  display        : flex;
+  justify-content: space-evenly;
+  align-items    : center;
+}
+
+.invalidNet .text {
+  display: none;
 }
 
 /*Devices larger than mobile phone*/
 @media (min-width: 576px) {
+  .main {
+    height : 2.5rem;
+    padding: 0.35rem 1rem;
+  }
 
+  .walletDetails .address {
+    display   : initial;
+    width     : 100%;
+    font-size : 0.7rem;
+    text-align: center;
+    color     : #34d399;
+  }
+
+  .walletDetails .balance {
+    display    : initial;
+    width      : 100%;
+    font-size  : 0.7rem;
+    font-weight: bold;
+    text-align : right;
+    color      : rgb(255, 255, 255);
+  }
+
+  .icon {
+    width: 2.5rem;
+
+    display        : flex;
+    justify-content: center;
+    align-items    : center;
+  }
+
+  .invalidNet .text {
+    display: initial;
+    font-size: 0.9rem;
+  }
+
+  .invalidNet .errorIcon {
+    width: 2rem;
+  }
 }
