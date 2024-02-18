@@ -1,33 +1,38 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { useAppProvider } from '@/app/app-provider'
+import { useEffect, useState } from "react";
+import { useAppProvider } from "@/app/app-provider";
 
-import SearchModal from '@/components/search-modal'
-import Notifications from '@/components/dropdown-notifications'
-import DropdownHelp from '@/components/dropdown-help'
-import ThemeToggle from '@/components/theme-toggle'
-import DropdownProfile from '@/components/dropdown-profile'
-import { ConnectWalletButton } from '../connect-wallet-button/connect-wallet-button'
-import { useWeb3Modal } from '@web3modal/ethers/react'
-import { useWalletContext } from '@/app/(default)/tokens/config/ValidateWalletConnection'
-import ConnectedWalletButton from '../ConnectedWalletButton/ConnectedWalletButton'
+import SearchModal from "@/components/search-modal";
+import Notifications from "@/components/dropdown-notifications";
+import DropdownHelp from "@/components/dropdown-help";
+import ThemeToggle from "@/components/theme-toggle";
+import DropdownProfile from "@/components/dropdown-profile";
+import { ConnectWalletButton } from "../connect-wallet-button/connect-wallet-button";
+import { useWeb3Modal } from "@web3modal/ethers/react";
+import { useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
+import ConnectedWalletButton from "../ConnectedWalletButton/ConnectedWalletButton";
 
 export default function Header() {
-
   const { open } = useWeb3Modal();
-  const { address, isConnected } = useWalletContext();
+  const { address, isConnected, balance, networkSymbol } = useWallet();
+  console.log("Balance: ", balance);
 
-  const { sidebarOpen, setSidebarOpen } = useAppProvider()
-  const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false)
+  const { sidebarOpen, setSidebarOpen } = useAppProvider();
+  const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
+  const [walletConnected, setWalletConnected] = useState<boolean>(false);
+
+  useEffect(() => {
+    setWalletConnected(isConnected);
+  }, [isConnected, walletConnected]);
 
   const connectWalletHandler = () => {
     try {
       open();
-    } catch(error) {
+    } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   return (
     <header className="sticky top-0 bg-white dark:bg-[#182235] border-b border-slate-200 dark:border-slate-700 z-30">
@@ -65,8 +70,14 @@ export default function Header() {
             <hr className="w-px h-6 bg-slate-200 dark:bg-slate-700 border-none" />
 
             {/* Connection */}
-            {isConnected ? (
-              <ConnectedWalletButton address={address} balance={0} initials='NNN'/>
+            {walletConnected ? (
+              <ConnectedWalletButton
+                walletChainId={97}
+                address={address}
+                balance={balance}
+                symbol={networkSymbol}
+                onClickHandler={connectWalletHandler}
+              />
             ) : (
               <ConnectWalletButton
                 text="Connect"
