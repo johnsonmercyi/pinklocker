@@ -5,18 +5,12 @@ import { useEffect, useState } from "react";
 
 const ConnectedWalletButton = ({
   walletChainId,
-  address,
-  balance,
-  symbol,
   onClickHandler,
 }: {
   walletChainId: number | undefined;
-  address: string | undefined;
-  balance: number | string | undefined;
-  symbol: string | undefined;
   onClickHandler: () => void;
 }) => {
-  const { chainId } = useWallet();
+  const { address, isConnected, balance, networkSymbol, chainId } = useWallet();
   const [isValidChain, setIsValidChain] = useState<boolean>(false);
 
   useEffect(() => {
@@ -38,7 +32,7 @@ const ConnectedWalletButton = ({
             </span>
             <span
               className={styles.balance}
-            >{`${balance} ${symbol?.toUpperCase()}`}</span>
+            >{`${balance} ${networkSymbol?.toUpperCase()}`}</span>
           </div>
           <Icon
             className={styles.icon}

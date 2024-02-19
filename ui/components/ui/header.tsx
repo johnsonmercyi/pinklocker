@@ -9,14 +9,13 @@ import DropdownHelp from "@/components/dropdown-help";
 import ThemeToggle from "@/components/theme-toggle";
 import DropdownProfile from "@/components/dropdown-profile";
 import { ConnectWalletButton } from "../connect-wallet-button/connect-wallet-button";
-import { useWeb3Modal } from "@web3modal/ethers/react";
-import { useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
+import { useWeb3Modal, useWeb3ModalAccount } from "@web3modal/ethers/react";
+import { ValidateWalletConnect, useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
 import ConnectedWalletButton from "../ConnectedWalletButton/ConnectedWalletButton";
 
 export default function Header() {
   const { open } = useWeb3Modal();
-  const { address, isConnected, balance, networkSymbol } = useWallet();
-  console.log("Balance: ", balance);
+  const { isConnected } = useWeb3ModalAccount();
 
   const { sidebarOpen, setSidebarOpen } = useAppProvider();
   const [searchModalOpen, setSearchModalOpen] = useState<boolean>(false);
@@ -71,13 +70,12 @@ export default function Header() {
 
             {/* Connection */}
             {walletConnected ? (
-              <ConnectedWalletButton
-                walletChainId={97}
-                address={address}
-                balance={balance}
-                symbol={networkSymbol}
-                onClickHandler={connectWalletHandler}
-              />
+              <ValidateWalletConnect>
+                <ConnectedWalletButton
+                  walletChainId={97}
+                  onClickHandler={connectWalletHandler}
+                />
+              </ValidateWalletConnect>
             ) : (
               <ConnectWalletButton
                 text="Connect"
