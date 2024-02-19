@@ -8,10 +8,11 @@ export interface Transaction {
   id: number;
   image: StaticImageData;
   name: string;
-  date: string;
-  status: string;
+  symbol: string;
   amount: string;
 }
+
+
 
 export default function TransactionsTable({
   headers,

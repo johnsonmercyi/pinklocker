@@ -54,23 +54,9 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
           </div>
         </div>
       </td>
-      <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-        <div className="text-left">{transaction.date}</div>
-      </td>
-      <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap">
-        <div className="text-left">
-          <div
-            className={`text-xs inline-flex font-medium rounded-full text-center px-2.5 py-1 ${statusColor(
-              transaction.status
-            )}`}
-          >
-            {transaction.status}
-          </div>
-        </div>
-      </td>
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
         <div
-          className={`text-right font-medium ${amountColor(
+          className={`text-left font-medium ${amountColor(
             transaction.amount
           )}`}
         >
@@ -78,6 +64,7 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
         </div>
       </td>
 
+      {/* Action button */}
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
         <div className="flex items-center">
           <div className="font-normal text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300">

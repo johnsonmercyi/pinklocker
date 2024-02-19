@@ -17,7 +17,11 @@ export default function DefaultLayout({
       <div className="relative flex flex-col flex-1 overflow-y-auto overflow-x-hidden">
         {/*  Site header */}
         <Header />
-        <main className="grow [&>*:first-child]:scroll-mt-16">{children}</main>
+        <ValidateWalletConnect>
+          <main className="grow [&>*:first-child]:scroll-mt-16">
+            {children}
+          </main>
+        </ValidateWalletConnect>
       </div>
     </div>
   );
