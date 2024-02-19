@@ -27,7 +27,8 @@ export default function Header() {
 
   const connectWalletHandler = () => {
     try {
-      open();
+      open({ view: "Connect" });
+      console.log("Connecting wallet...");
     } catch (error) {
       console.log(error);
     }
