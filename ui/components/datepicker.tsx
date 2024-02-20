@@ -30,9 +30,9 @@ export default function Datepicker({ align }: {
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative flex">
       <Flatpickr
-        className="form-input w-[100vw] pl-9 dark:bg-slate-800 text-slate-500 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-200 font-medium"
+        className="form-input flex-1 pl-9 dark:bg-slate-800 text-slate-500 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-200 font-medium"
         options={options}
       />
       <div className="absolute inset-0 right-auto flex items-center pointer-events-none">
