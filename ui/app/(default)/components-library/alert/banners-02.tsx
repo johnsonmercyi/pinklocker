@@ -13,19 +13,19 @@ export default function Banners02() {
   return (
     <div className="space-y-3">
 
-      <Banner02 type="warning" open={banner2WarningOpen} setOpen={setBanner2WarningOpen}>
+      <Banner02 type="warning" open={banner2WarningOpen} >
         We're currently experiencing an increase in inquiries. There may be a delay in responses from the Support.
       </Banner02>
 
-      <Banner02 type="success" open={banner2SuccessOpen} setOpen={setBanner2SuccessOpen}>
+      <Banner02 type="success" open={banner2SuccessOpen} >
         We're currently experiencing an increase in inquiries. There may be a delay in responses from the Support.
       </Banner02>
 
-      <Banner02 type="error" open={banner2ErrorOpen} setOpen={setBanner2ErrorOpen}>
+      <Banner02 type="error" open={banner2ErrorOpen} >
         We're currently experiencing an increase in inquiries. There may be a delay in responses from the Support.
       </Banner02>
 
-      <Banner02 open={banner2InfoOpen} setOpen={setBanner2InfoOpen}>
+      <Banner02 open={banner2InfoOpen} >
         We're currently experiencing an increase in inquiries. There may be a delay in responses from the Support.
       </Banner02>
 

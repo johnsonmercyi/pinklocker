@@ -18,7 +18,7 @@ const bscTestnet = {
   name: 'Binance Smart Chain Testnet',
   currency: 'BNB',
   explorerUrl: 'https://testnet.bscscan.com',
-  rpcUrl: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+  rpcUrl: 'https://data-seed-prebsc-2-s3.binance.org:8545/',
 };
 
 
