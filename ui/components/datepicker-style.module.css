@@ -1,0 +1,7 @@
+.datepicker {
+  width: 100% !important;
+}
+
+.datepicker.relative>div.flatpickr-wrapper {
+  width: 100% !important;
+}

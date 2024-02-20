@@ -1,7 +1,303 @@
+"use client";
+
 import Datepicker from "@/components/datepicker";
+import { Icon, dateToSeconds } from "@/components/utils/utility";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import styles from "./styles.module.css";
+import Banner02 from "@/components/banner-02";
+import { DatePickerProvider, useDatePicker } from "../context/DateProvider";
+import {
+  useWeb3ModalAccount,
+  useWeb3ModalProvider,
+} from "@web3modal/ethers/react";
+import pinkLockInstance from "@/blockchain/config/PinkLock";
+import { useRouter } from "next/navigation";
+import tokenInstance from "@/blockchain/config/ERC20";
+
+interface Fields {
+  tokenAddress: string;
+  anotherOwner: string;
+  lockTitle: string;
+  amount: string;
+}
 
 const CreateNewLock = () => {
+  const [useAnotherOwner, setUseAnotherOwner] = useState<boolean>(false);
+  const [fields, setFields] = useState<Fields>({
+    amount: "",
+    anotherOwner: "",
+    lockTitle: "",
+    tokenAddress: "",
+  });
+
+  const [fieldError, setFieldError] = useState<{
+    amount: string;
+    anotherOwner: string;
+    tokenAddress: string;
+    lockDate: string;
+  }>({
+    amount: "",
+    anotherOwner: "",
+    tokenAddress: "",
+    lockDate: "",
+  });
+
+  const { dateString, selectedDates } = useDatePicker();
+  const [lockUntilDate, setLockUntilDate] = useState<number>(0);
+  const [ownerAddress, setOwnerAddress] = useState<string>("");
+  const [showBanner, setShowBanner] = useState<boolean>(false);
+  const [bannerType, setBannerType] = useState<
+    "success" | "error" | "warning" | undefined
+  >("success");
+  const [bannerMessage, setBannerMessage] = useState<string>("");
+  const [shouldSubmit, setShouldSubmit] = useState<boolean>(false);
+
+  const { address, isConnected } = useWeb3ModalAccount();
+  const { walletProvider } = useWeb3ModalProvider();
+
+  const router = useRouter();
+
+  // For when app mounts
+  useEffect(() => {
+    setLockUntilDate(dateToSeconds(dateString || ""));
+  }, []);
+
+  // For when date is updated
+  useEffect(() => {
+    if (dateString) {
+      setLockUntilDate(dateToSeconds(dateString));
+    }
+  }, [dateString]);
+
+  useEffect(() => {
+    if (address) {
+      setOwnerAddress(address);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    setBannerType(bannerType);
+  }, [bannerType]);
+
+  const onChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
+    setShowBanner(false);
+    setBannerMessage("");
+    try {
+      const input: string = event.target.name;
+      const value: string = event.target.value;
+
+      let amount: number = 0;
+
+      // If amount is not a number this will trigger an error
+      if (input === "amount") {
+        if (Number.isNaN(Number(value)))
+          throw new Error("Amount must be a number!");
+      }
+
+      setFields((fields) => ({
+        ...fields,
+        [input]: value,
+      }));
+    } catch (error: any) {
+      setShowBanner(true);
+      setBannerType("error");
+      setBannerMessage(error.message);
+    }
+  };
+
+  const useAnotherOwnerHandler = () => {
+    setUseAnotherOwner((oldState) => !oldState);
+  };
+
+  const onSubmitHandler = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (validateFields()) {
+      if (isConnected && walletProvider) {
+        try {
+          setShouldSubmit(true);
+          setShowBanner(false);
+          setBannerMessage("");
+          const pinkLocker = await pinkLockInstance(walletProvider);
+          
+          const tokenObj = await tokenInstance(
+            fields.tokenAddress,
+            walletProvider
+          );
+
+          console.log("TOKEN: ", tokenObj);
+          const tokenInst = tokenObj.instance;
+          const signer = tokenObj.signer;
+
+          const tokenWithSigner = tokenInst.connect(signer);
+
+          const tokenApproval = await tokenWithSigner.approve(
+            tokenLockerAddress,
+            amountToApprove
+          );
+
+          const approvalReceipt = await tokenApproval.wait();
+
+          const owner = useAnotherOwner ? fields.anotherOwner : ownerAddress;
+          const token = fields.tokenAddress;
+          const isLpToken = false;
+          const amount = BigInt(fields.amount);
+          const unlockDate = lockUntilDate;
+          const description = fields.lockTitle;
+
+          console.log(new Date(unlockDate * 1000));
+
+          // Submit lock transaction to blockchain
+          console.log(
+            "PREPED FIELDS: ",
+            owner,
+            token,
+            isLpToken,
+            amount,
+            unlockDate,
+            description
+          );
+          const lockTransX = await pinkLocker.lock(
+            owner,
+            token,
+            isLpToken,
+            amount,
+            unlockDate,
+            description
+          );
+          console.log(
+            "HEEEEY LOCKED!",
+            owner,
+            token,
+            isLpToken,
+            amount,
+            unlockDate,
+            description
+          );
+
+          // Fetch lock transaction hash
+          const lockTransXHash = lockTransX.hash;
+          console.log("Lock Transaction Hash:", lockTransXHash);
+
+          setShowBanner(true);
+          setBannerType("success");
+          setBannerMessage(
+            `Lock transaction submitted and awaiting confirmation!`
+          );
+
+          // Waiting for the transaction to be mined
+          const lockReceipt = await lockTransX.wait();
+
+          // Log the transaction receipt
+          console.log("Deposit Transaction Receipt:", lockReceipt);
+          router.push(`/tokens`);
+        } catch (error: any) {
+          setShouldSubmit(false);
+          setShowBanner(true);
+          setBannerType("error");
+          setBannerMessage(error.message);
+
+          if (
+            String(error.message).includes(
+              `execution reverted: "Unlock date should be in the future"`
+            )
+          ) {
+            setBannerMessage("Unlock date should be in the future.");
+          }
+        }
+      } else {
+        setShouldSubmit(false);
+        setShowBanner(true);
+        setBannerType("error");
+        setBannerMessage("Please kindly connect your wallet to BNB Testnet!");
+      }
+    }
+  };
+
+  const validateFields = () => {
+    if (!fields.tokenAddress) {
+      setFieldError((fields) => ({
+        ...fields,
+        tokenAddress: "Enter token address",
+      }));
+    } else {
+      if (fields.tokenAddress.length !== 42) {
+        setFieldError((fields) => ({
+          ...fields,
+          tokenAddress: "Invalid token address",
+        }));
+      } else {
+        setFieldError((fields) => ({
+          ...fields,
+          tokenAddress: "",
+        }));
+      }
+    }
+
+    if (useAnotherOwner) {
+      if (!fields.anotherOwner) {
+        setFieldError((fields) => ({
+          ...fields,
+          anotherOwner: "Enter owner address",
+        }));
+      } else {
+        if (fields.anotherOwner.length !== 42) {
+          setFieldError((fields) => ({
+            ...fields,
+            anotherOwner: "Invalid owner address",
+          }));
+        } else {
+          setFieldError((fields) => ({
+            ...fields,
+            anotherOwner: "",
+          }));
+        }
+      }
+    }
+
+    if (!fields.amount) {
+      setFieldError((fields) => ({
+        ...fields,
+        amount: "Enter token amount",
+      }));
+    } else {
+      setFieldError((fields) => ({
+        ...fields,
+        amount: "",
+      }));
+    }
+
+    if (!lockUntilDate) {
+      setFieldError((fields) => ({
+        ...fields,
+        lockDate: "Select lock until(UCT time) date",
+      }));
+    } else {
+      setFieldError((fields) => ({
+        ...fields,
+        lockDate: "",
+      }));
+    }
+
+    if (useAnotherOwner) {
+      return (
+        fields.tokenAddress &&
+        fields.tokenAddress.length === 42 &&
+        fields.anotherOwner &&
+        fields.anotherOwner.length === 42 &&
+        fields.amount &&
+        lockUntilDate
+      );
+    } else {
+      return (
+        fields.tokenAddress &&
+        fields.tokenAddress.length === 42 &&
+        fields.amount &&
+        lockUntilDate
+      );
+    }
+  };
+
   return (
     <div className="relative bg-white dark:bg-slate-900 h-full">
       <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
@@ -14,45 +310,73 @@ const CreateNewLock = () => {
 
         <div className="border-t border-slate-200 dark:border-slate-700">
           {/* Form */}
-          <form className="space-y-8 mt-8">
+          <form
+            className="space-y-8 mt-8"
+            onSubmit={(event) => onSubmitHandler(event)}
+          >
             {/* Token Address */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                htmlFor="mandatory"
-              >
-                Token Address <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="tokenAddress"
-                className="form-input w-full"
-                type="text"
-                required
-                placeholder="Enter token address"
-              />
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  htmlFor="error"
+                >
+                  Token Address <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  name={"tokenAddress"}
+                  value={fields.tokenAddress}
+                  id="error"
+                  className="form-input w-full"
+                  type="text"
+                  placeholder="Enter token address"
+                  onChange={onChangeHandler}
+                />
+              </div>
+              <div className="text-xs mt-1 text-rose-500">
+                {fieldError.tokenAddress}
+              </div>
             </div>
 
             {/* Another owner Checkbox */}
-            <label className="flex items-center">
-              <input type="checkbox" className="form-checkbox" defaultChecked />
+            <label
+              className="flex items-center"
+              style={{ width: "fit-content" }}
+            >
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                defaultChecked={useAnotherOwner}
+                onChange={useAnotherOwnerHandler}
+              />
               <span className="text-sm ml-2">Use another owner?</span>
             </label>
 
             {/* Another Owner Field*/}
-            <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                htmlFor="default"
-              >
-                Owner
-              </label>
-              <input
-                id="default"
-                className="form-input w-full"
-                type="text"
-                placeholder="Enter owner address"
-              />
-            </div>
+            {useAnotherOwner ? (
+              <div>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="error"
+                  >
+                    Owner <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    name={"anotherOwner"}
+                    value={fields.anotherOwner}
+                    id="error"
+                    className="form-input w-full"
+                    type="text"
+                    placeholder="Enter owner address"
+                    onChange={onChangeHandler}
+                  />
+                </div>
+                <div className="text-xs mt-1 text-rose-500">
+                  {fieldError.anotherOwner}
+                </div>
+              </div>
+            ) : null}
 
             {/* Title Field*/}
             <div>
@@ -63,41 +387,81 @@ const CreateNewLock = () => {
                 Title
               </label>
               <input
+                name={"lockTitle"}
+                value={fields.lockTitle}
                 id="default"
                 className="form-input w-full"
                 type="text"
                 placeholder="Enter lock title"
+                onChange={onChangeHandler}
               />
             </div>
 
             {/* Amount Field */}
             <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                htmlFor="mandatory"
-              >
-                Amount <span className="text-rose-500">*</span>
-              </label>
-              <input
-                id="tokenAddress"
-                className="form-input w-full"
-                type="text"
-                required
-                placeholder="Enter lock token amount"
-              />
+              <div>
+                <label
+                  className="block text-sm font-medium mb-1"
+                  htmlFor="error"
+                >
+                  Amount <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  name={"amount"}
+                  value={fields.amount}
+                  id="error"
+                  className="form-input w-full"
+                  type="text"
+                  placeholder="Enter lock token amount"
+                  onChange={onChangeHandler}
+                />
+              </div>
+              <div className="text-xs mt-1 text-rose-500">
+                {fieldError.amount}
+              </div>
             </div>
 
             {/* Datepicker */}
-
             <div>
-              <label
-                className="block text-sm font-medium mb-1"
-                htmlFor="mandatory"
-              >
-                Lock Until (UTC time) <span className="text-rose-500">*</span>
-              </label>
-              <Datepicker />
+              <div className={styles.dateAndLockBtnWrapper}>
+                <div>
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="mandatory"
+                  >
+                    Lock Until (UTC time){" "}
+                    <span className="text-rose-500">*</span>
+                  </label>
+                  <Datepicker />
+                </div>
+
+                <div className={styles.buttonWrapper}>
+                  <button
+                    className={`btn bg-indigo-500 hover:bg-indigo-600 text-white ${
+                      shouldSubmit
+                        ? "disabled:border-slate-200 dark:disabled:border-slate-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-none"
+                        : ""
+                    }`}
+                    disabled={shouldSubmit}
+                    type="submit"
+                  >
+                    {shouldSubmit ? (
+                      <Icon name="spinner" />
+                    ) : (
+                      <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
+                    )}
+                    <span className="hidden xs:block ml-2">Lock</span>
+                  </button>
+                </div>
+              </div>
+              <div className="text-xs mt-1 text-rose-500">
+                {fieldError.lockDate}
+              </div>
             </div>
+
+            <Banner02 type={bannerType} open={showBanner}>
+              {bannerMessage}
+            </Banner02>
           </form>
         </div>
       </div>

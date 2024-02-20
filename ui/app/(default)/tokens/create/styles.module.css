@@ -1,6 +1,19 @@
 /*Mobile First Style*/
 .main {}
 
+.dateAndLockBtnWrapper {
+  width: 100%;
+
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+}
+
+.buttonWrapper {
+  width: 100%;
+  padding: 0 1rem;
+}
+
 /*Devices larger than mobile phone*/
 @media (min-width: 576px) {
 

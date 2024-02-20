@@ -2,6 +2,8 @@ import Sidebar from "@/components/ui/sidebar";
 import Header from "@/components/ui/header";
 import { Web3ModalProvider } from "@/app/(default)/tokens/config/Web3ModalConfig";
 import { ValidateWalletConnect } from "./tokens/config/ValidateWalletConnection";
+import { DateContext } from "./tokens/context/DateContext";
+import { DatePickerProvider } from "./tokens/context/DateProvider";
 
 export default function DefaultLayout({
   children,
@@ -18,9 +20,11 @@ export default function DefaultLayout({
         {/*  Site header */}
         <Header />
         <ValidateWalletConnect>
-          <main className="grow [&>*:first-child]:scroll-mt-16">
-            {children}
-          </main>
+          <DatePickerProvider>
+            <main className="grow [&>*:first-child]:scroll-mt-16">
+              {children}
+            </main>
+          </DatePickerProvider>
         </ValidateWalletConnect>
       </div>
     </div>
