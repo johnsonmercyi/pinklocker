@@ -6,26 +6,20 @@ import { FlyoutProvider } from "@/app/flyout-context";
 import { SelectedItemsProvider } from "@/app/selected-items-context";
 import SearchForm from "@/components/search-form";
 import { TransactionDetailProvider } from "./ui/table/transaction-context";
-import TransactionPanel from "./ui/table/transaction-panel";
 import OrdersTable, { Transaction } from "./ui/table/transactions-table";
 
-import Image01 from "@/public/images/transactions-image-01.svg";
-import Image02 from "@/public/images/transactions-image-02.svg";
-import Image04 from "@/public/images/transactions-image-03.svg";
-import Image03 from "@/public/images/user-36-05.jpg";
-import PaginationNumeric from "@/components/pagination-numeric";
-import { useEffect, useState } from "react";
-import pinkLockInstance from "@/blockchain/config/PinkLock";
-import { useWeb3ModalProvider } from "@web3modal/ethers/react";
-import { useWallet } from "./config/ValidateWalletConnection";
-import { Contract, Eip1193Provider } from "ethers";
-import PaginationNumeric02 from "@/components/pagination-numeric-2";
-import PaginationClassic from "@/components/pagination-classic";
 import tokenInstance from "@/blockchain/config/ERC20";
-import parse from "html-react-parser";
+import pinkLockInstance from "@/blockchain/config/PinkLock";
+import PaginationClassic from "@/components/pagination-classic";
+import Image01 from "@/public/images/transactions-image-01.svg";
+import { useWeb3ModalProvider } from "@web3modal/ethers/react";
+import { Contract } from "ethers";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useWallet } from "./config/ValidateWalletConnection";
 
 type Lock = {
+  index: number;
   token: string;
   name: string;
   symbol: string;
@@ -77,24 +71,46 @@ export default function Page() {
         startIndex,
         endIndex
       );
-  
-      const convertedLocks: Lock[] = locks.map(async(lock: any) => {
-  
-        const tokenObj = await tokenInstance(lock.token, walletProvider);
-        const symbol = await tokenObj.instance.symbol();
-        const name = await tokenObj.instance.name();
-        
-        return {
-          token: lock.token,
-          name: name,
-          symbol: symbol,
-          factory: lock.factory,
-          amount: parseInt(lock.amount),
-        };
-      });
-  
-      console.log("LOCKS: ", convertedLocks);
-      setLocks(convertedLocks);
+
+      // const convertedLocks: Lock[] =  [...locks]
+      //   .map((lock: any, index: any) => ({ index, ...lock }))
+      //   .reverse()
+      //   .map(async (lock: any, index: number) => {
+      //     const tokenObj = await tokenInstance(lock.token, walletProvider);
+      //     const symbol = await tokenObj.instance.symbol();
+      //     const name = await tokenObj.instance.name();
+
+      //     return {
+      //       index: lock.id,
+      //       token: lock.token,
+      //       name: name,
+      //       symbol: symbol,
+      //       factory: lock.factory,
+      //       amount: BigInt(lock.amount) / 10n ** 18n,
+      //     };
+      //   });
+
+      const convertedLocks: Lock[] = locks.map(
+        async (lock: any, index: number) => {
+          const tokenObj = await tokenInstance(lock.token, walletProvider);
+          const symbol = await tokenObj.instance.symbol();
+          const name = await tokenObj.instance.name();
+
+          return {
+            index: index,
+            token: lock.token,
+            name: name,
+            symbol: symbol,
+            factory: lock.factory,
+            amount: BigInt(lock.amount) / 10n ** 18n,
+          };
+        }
+      ).reverse();
+
+      const resolvedLocks = await Promise.all(convertedLocks);
+
+      console.log("LOCKS: ", resolvedLocks);
+      setLocks(resolvedLocks);
     }
   };
 
@@ -105,7 +121,7 @@ export default function Page() {
 
   const createNewLockHandler = () => {
     router.push(`/tokens/create`);
-  }
+  };
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
@@ -116,7 +132,10 @@ export default function Page() {
             <SelectedItemsProvider>
               <FlyoutProvider>
                 <TransactionDetailProvider>
-                  <Transactions locks={locks} />
+                  <Transactions
+                    locks={locks}
+                    createNewLockHandler={createNewLockHandler}
+                  />
                 </TransactionDetailProvider>
               </FlyoutProvider>
             </SelectedItemsProvider>
@@ -158,43 +177,18 @@ export default function Page() {
 
 function Transactions({
   locks,
+  createNewLockHandler,
 }: {
   locks: Lock[];
+  createNewLockHandler: () => void;
 }) {
-  // Some dummy transactions data
-  // const transactions = [
-  //   {
-  //     id: 0,
-  //     image: Image01,
-  //     name: "BNB",
-  //     amount: "1 BNB",
-  //   },
-  //   {
-  //     id: 1,
-  //     image: Image02,
-  //     name: "USDT",
-  //     amount: "2,000 USDT",
-  //   },
-  //   {
-  //     id: 2,
-  //     image: Image03,
-  //     name: "SOFTT",
-  //     amount: "0.1 SFT",
-  //   },
-  //   {
-  //     id: 3,
-  //     image: Image04,
-  //     name: "USBT",
-  //     amount: "500 USBT",
-  //   },
-  // ];
-
-  const transactions: Transaction[] = locks.map((lock: any, index: number) => ({
-    id: index,
+  const transactions: Transaction[] = locks.map((lock: any) => ({
+    index: lock.index,
     name: lock.name,
+    token: lock.token,
     symbol: lock.symbol,
     amount: lock.amount,
-    image: Image01
+    image: Image01,
   }));
 
   return (
@@ -217,10 +211,14 @@ function Transactions({
             </div>
 
             {/* Add account button */}
-            <button className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
+            <button
+              onClick={createNewLockHandler}
+              className="btn bg-indigo-500 hover:bg-indigo-600 text-white"
+            >
               <svg
                 className="w-4 h-4 fill-current opacity-50 shrink-0"
-                viewBox="0 0 16 16">
+                viewBox="0 0 16 16"
+              >
                 <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
               </svg>
               <span className="hidden xs:block ml-2">Lock New Lock</span>

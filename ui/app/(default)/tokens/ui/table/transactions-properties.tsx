@@ -11,12 +11,13 @@ export const TransactionsProperties = () => {
   }
 
   const amountColor = (amount: string): string => {
-    switch (amount.charAt(0)) {
-      case '+':
-        return 'text-emerald-500'
-      default:
-        return 'text-slate-800 dark:text-slate-300'
-    }
+    // switch (amount.charAt(0)) {
+    //   case '+':
+    //     return 'text-emerald-500'
+    //   default:
+    //     return 'text-slate-800 dark:text-slate-300'
+    // }
+    return 'text-emerald-500';
   } 
 
   return {

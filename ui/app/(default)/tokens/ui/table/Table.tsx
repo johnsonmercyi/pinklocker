@@ -1,36 +1,14 @@
-"use client";
+import TableTransaction from "../../interfaces/global";
 
-import { StaticImageData } from "next/image";
-import { useItemSelection } from "@/components/utils/use-item-selection";
-import TransactionsTableItem from "./transactions-table-item";
-
-export interface Transaction {
-  index: number;
-  image: StaticImageData;
-  name: string;
-  token: string;
-  symbol: string;
-  amount: string;
-}
-
-
-
-export default function TransactionsTable({
+const Table = ({
+  children,
   headers,
   transactions,
 }: {
+  children: React.ReactNode;
   headers: string[];
-  transactions: Transaction[];
-}) {
-  const {
-    selectedItems,
-    isAllSelected,
-    handleCheckboxChange,
-    handleSelectAllChange,
-  } = useItemSelection(transactions);
-
-  // console.log("Transaction: ", transactions);
-
+  transactions: any[];
+}) => {
   return (
     <div className="bg-white dark:bg-slate-900">
       <div>
@@ -41,7 +19,10 @@ export default function TransactionsTable({
             <thead className="text-xs font-semibold uppercase text-slate-500 border-t border-b border-slate-200 dark:border-slate-700">
               <tr>
                 {headers.map((header, i) => (
-                  <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap" key={header + "_" + i}>
+                  <th
+                    className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap"
+                    key={header + "_" + i}
+                  >
                     <div className="font-semibold text-left">{header}</div>
                   </th>
                 ))}
@@ -63,4 +44,6 @@ export default function TransactionsTable({
       </div>
     </div>
   );
-}
+};
+
+export default Table;

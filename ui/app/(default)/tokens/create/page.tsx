@@ -118,6 +118,15 @@ const CreateNewLock = () => {
           setShouldSubmit(true);
           setShowBanner(false);
           setBannerMessage("");
+
+          const owner = useAnotherOwner ? fields.anotherOwner : ownerAddress;
+          const token = fields.tokenAddress;
+          const isLpToken = false;
+          let amount = BigInt(fields.amount);
+          amount = amount * 10n ** 18n;
+          const unlockDate = lockUntilDate;
+          const description = fields.lockTitle;
+
           const pinkLocker = await pinkLockInstance(walletProvider);
           
           const tokenObj = await tokenInstance(
@@ -129,23 +138,16 @@ const CreateNewLock = () => {
           const tokenInst = tokenObj.instance;
           const signer = tokenObj.signer;
 
-          const tokenWithSigner = tokenInst.connect(signer);
+          // const tokenWithSigner = tokenInst.connect(signer);
 
-          const tokenApproval = await tokenWithSigner.approve(
-            tokenLockerAddress,
-            amountToApprove
+          const tokenApproval = await tokenInst.approve(
+            process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS,
+            amount
           );
 
           const approvalReceipt = await tokenApproval.wait();
 
-          const owner = useAnotherOwner ? fields.anotherOwner : ownerAddress;
-          const token = fields.tokenAddress;
-          const isLpToken = false;
-          const amount = BigInt(fields.amount);
-          const unlockDate = lockUntilDate;
-          const description = fields.lockTitle;
-
-          console.log(new Date(unlockDate * 1000));
+          console.log("RECEIPT: ", approvalReceipt);
 
           // Submit lock transaction to blockchain
           console.log(
@@ -157,39 +159,43 @@ const CreateNewLock = () => {
             unlockDate,
             description
           );
-          const lockTransX = await pinkLocker.lock(
-            owner,
-            token,
-            isLpToken,
-            amount,
-            unlockDate,
-            description
-          );
-          console.log(
-            "HEEEEY LOCKED!",
-            owner,
-            token,
-            isLpToken,
-            amount,
-            unlockDate,
-            description
-          );
 
-          // Fetch lock transaction hash
-          const lockTransXHash = lockTransX.hash;
-          console.log("Lock Transaction Hash:", lockTransXHash);
+          if (approvalReceipt.status === 1) {
+            const lockTransX = await pinkLocker.lock(
+              owner,
+              token,
+              isLpToken,
+              amount,
+              unlockDate,
+              description
+            );
+            console.log(
+              "HEEEEY LOCKED!",
+              owner,
+              token,
+              isLpToken,
+              amount,
+              unlockDate,
+              description
+            );
+  
+            // Fetch lock transaction hash
+            const lockTransXHash = lockTransX.hash;
+            console.log("Lock Transaction Hash:", lockTransXHash);
+  
+            setShowBanner(true);
+            setBannerType("success");
+            setBannerMessage(
+              `Lock transaction submitted and awaiting confirmation!`
+            );
+  
+            // Waiting for the transaction to be mined
+            const lockReceipt = await lockTransX.wait();
+  
+            // Log the transaction receipt
+            console.log("Deposit Transaction Receipt:", lockReceipt);
+          }
 
-          setShowBanner(true);
-          setBannerType("success");
-          setBannerMessage(
-            `Lock transaction submitted and awaiting confirmation!`
-          );
-
-          // Waiting for the transaction to be mined
-          const lockReceipt = await lockTransX.wait();
-
-          // Log the transaction receipt
-          console.log("Deposit Transaction Receipt:", lockReceipt);
           router.push(`/tokens`);
         } catch (error: any) {
           setShouldSubmit(false);

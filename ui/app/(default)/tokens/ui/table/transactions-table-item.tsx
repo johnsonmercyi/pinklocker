@@ -1,36 +1,43 @@
-import Image from 'next/image'
-import { Transaction } from './transactions-table'
-import { TransactionsProperties } from './transactions-properties'
-import { useFlyoutContext } from '@/app/flyout-context'
-import { useTransactionDetail } from './transaction-context'
+import Image from "next/image";
+import { Transaction } from "./transactions-table";
+import { TransactionsProperties } from "./transactions-properties";
+import { useFlyoutContext } from "@/app/flyout-context";
+import { useTransactionDetail } from "./transaction-context";
+import { useRouter } from "next/navigation";
 
 interface TransactionsTableItemProps {
-  transaction: Transaction
-  onCheckboxChange: (id: number, checked: boolean) => void
-  isSelected: boolean
+  transaction: Transaction;
+  onCheckboxChange: (id: number, checked: boolean) => void;
+  isSelected: boolean;
 }
 
-export default function TransactionsTableItem({ transaction, onCheckboxChange, isSelected }: TransactionsTableItemProps) {
+export default function TransactionsTableItem({
+  transaction,
+  onCheckboxChange,
+  isSelected,
+}: TransactionsTableItemProps) {
+  const router = useRouter();
 
-  const { setFlyoutOpen } = useFlyoutContext()
+  const { setFlyoutOpen } = useFlyoutContext();
 
-  const { setTransaction } = useTransactionDetail()
+  const { setTransaction } = useTransactionDetail();
 
-  const {
-    statusColor,
-    amountColor,
-  } = TransactionsProperties()  
+  const { statusColor, amountColor } = TransactionsProperties();
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {        
-    onCheckboxChange(transaction.id, e.target.checked)
-  }
+  // const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   onCheckboxChange(transaction.id, e.target.checked)
+  // }
 
-  const handleTransactionClick = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {    
-    e.stopPropagation()
-    e.nativeEvent.stopImmediatePropagation()
-    setFlyoutOpen(true)
-    setTransaction(transaction)
-  }
+  const handleTransactionClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    e.stopPropagation();
+
+    // e.nativeEvent.stopImmediatePropagation()
+    // setFlyoutOpen(true)
+    // setTransaction(transaction)
+    router.push(`/tokens/${transaction.index}`);
+  };
 
   return (
     <tr>
@@ -56,11 +63,9 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
       </td>
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
         <div
-          className={`text-left font-medium ${amountColor(
-            transaction.amount
-          )}`}
+          className={`text-left font-medium ${amountColor(transaction.amount)}`}
         >
-          {transaction.amount}
+          {Number(transaction.amount)}
         </div>
       </td>
 
@@ -68,7 +73,9 @@ export default function TransactionsTableItem({ transaction, onCheckboxChange, i
       <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
         <div className="flex items-center">
           <div className="font-normal text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300">
-            <button onClick={(e) => handleTransactionClick(e)}>View Details</button>
+            <button onClick={(e) => handleTransactionClick(e)}>
+              View Details
+            </button>
           </div>
         </div>
       </td>
