@@ -1,10 +1,6 @@
 import { StaticImageData } from "next/image";
 
-export default interface TableTransaction {
-
-}
-
-export interface AcumulativeToken extends TableTransaction {
+export interface AcumulativeToken {
   index: number;
   image: StaticImageData;
   name: string;

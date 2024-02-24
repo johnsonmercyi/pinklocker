@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import ListCard from "../ui/listcard/ListCard";
 import ListCardItem from "../ui/listcard/ListCardItem";
+import styles from './styles/styles.module.css';
+
 import {
   useParams,
   usePathname,
@@ -12,6 +14,7 @@ import {
 import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import tokenInstance from "@/blockchain/config/ERC20";
 import pinkLockInstance from "@/blockchain/config/PinkLock";
+import Table from "../ui/table/Table";
 
 interface AcumulativeTokenInfo {
   token: string;
@@ -70,12 +73,26 @@ const ViewToken = () => {
 
         setTokenName(name);
         setTokenSymbol(symbol);
-        setTokenDecimal(Number(decimal));
+        setTokenDecimal(Number(decimal));te
       }
     };
 
-    initTokenDetails();
+    const initLockRecords = async() => {
+      await initTokenDetails();
+      if (token && walletProvider) {
+        const pinkLock = await pinkLockInstance(walletProvider);
+        const tokenLocks = await pinkLock.getLocksForToken(token, 0, 10);
+        console.log("TOKEN LOCKS 0 - 10...", tokenLocks);
+      }
+    }
+
+    initLockRecords();
+    
   }, [token]);
+
+  const viewLockRecordHandler = () => {
+    alert("Opening...");
+  };
 
   return (
     <div className="relative bg-white dark:bg-slate-900 h-full">
@@ -86,15 +103,36 @@ const ViewToken = () => {
             Token Details ✨
           </h1>
         </div>
-
-        <ListCard title={tokenName}>
+        <ListCard
+          className={styles.listCard}
+          title={"Lock Info"}
+          subTitle={tokenName}
+        >
           <ListCardItem property="Current Locked Amount" value={lockAmount} />
-          <ListCardItem property="Current Locked Value" value={"$0"} />
+          <ListCardItem
+            property="Current Locked Value"
+            value={`$${lockValue}`}
+          />
           <ListCardItem property="Token Address" value={token} />
           <ListCardItem property="Token Name" value={tokenName} />
           <ListCardItem property="Token Symbol" value={tokenSymbol} />
           <ListCardItem property="Token Decimal" value={tokenDecimal} />
         </ListCard>
+        {/* Wallet Amount Cycle(d) Cycle Release(%) TGE(%) Unlock time(UTC) */}
+        <Table
+          title="Lock Records"
+          className={styles.table}
+          headers={[
+            "Wallet",
+            "Amount",
+            "Cycle(d)",
+            "Cycle Release(%)",
+            "TGE(%) Unlock time(UTC)",
+            "Action",
+          ]}
+          clickHandler={viewLockRecordHandler}
+          transactions={[]}
+        />
       </div>
     </div>
   );

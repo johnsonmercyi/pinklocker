@@ -1292,7 +1292,7 @@ library EnumerableSet {
 
 // Root file: contracts/PinkLock02.sol
 
-pragma solidity =0.8.4;
+// pragma solidity =0.8.4;
 
 
 contract PinkLock is IPinkLock {
