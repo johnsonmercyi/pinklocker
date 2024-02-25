@@ -20,27 +20,28 @@ const ConnectedWalletButton = ({
   }, [walletChainId, chainId]);
 
   return (
-    <div className={styles.main} onClick={onClickHandler}>
+    <div
+      className={`flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600/80 ${styles.main}`}
+      onClick={onClickHandler}
+    >
       {isValidChain ? (
         <>
           <div className={styles.walletDetails}>
-            <span className={styles.address}>
+            <span
+              className={`text-slate-500 dark:text-slate-400 ${styles.address}`}
+            >
               {`${address?.substring(0, 6)}...${address?.substring(
                 address.length - 4,
                 address.length
               )}`}
             </span>
             <span
-              className={styles.balance}
+              className={`text-green-500 dark:text-green-400 ${styles.balance}`}
             >{`${balance} ${networkSymbol?.toUpperCase()}`}</span>
           </div>
           <Icon
             className={styles.icon}
             name="wallet"
-            stroke="rgba(255, 255, 255, 0.5)"
-            strokeWidth="1.2"
-            width="30"
-            height="30"
           />
         </>
       ) : (

@@ -7,6 +7,7 @@ import styles from "./styles.module.css";
 import Banner02 from "@/components/banner-02";
 import { DatePickerProvider, useDatePicker } from "../context/DateProvider";
 import {
+  useWeb3Modal,
   useWeb3ModalAccount,
   useWeb3ModalProvider,
 } from "@web3modal/ethers/react";
@@ -51,9 +52,12 @@ const CreateNewLock = () => {
   >("success");
   const [bannerMessage, setBannerMessage] = useState<string>("");
   const [shouldSubmit, setShouldSubmit] = useState<boolean>(false);
+  const [buttonText, setButtonText] = useState<"Lock" | "Approve">("Lock");
+  const [allowance, setAllowance] = useState<number>(0);
 
   const { address, isConnected } = useWeb3ModalAccount();
   const { walletProvider } = useWeb3ModalProvider();
+  const { open } = useWeb3Modal();
 
   const router = useRouter();
 
@@ -78,6 +82,47 @@ const CreateNewLock = () => {
   useEffect(() => {
     setBannerType(bannerType);
   }, [bannerType]);
+
+  useEffect(()=> {
+    if (!isConnected) {
+      open();
+    }
+  }, [isConnected]);
+
+  useEffect(() => {
+    const checkContractAllowance = async() => {
+      if (fields.tokenAddress && fields.amount) {
+        if (walletProvider) {
+          const tokenObj = await tokenInstance(
+            fields.tokenAddress,
+            walletProvider
+          );
+
+          const tokenInst = tokenObj.instance;
+
+          const tokenAllowance = await tokenInst.allowance(
+            ownerAddress,
+            process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
+          );
+
+          setAllowance(Number(BigInt(tokenAllowance) / 10n ** 18n));
+          
+        }
+      }
+    }
+
+    checkContractAllowance();
+
+  }, [fields.tokenAddress, fields.amount, isConnected]);
+
+  useEffect(()=> {
+    console.log("Allowance changed: ", allowance);
+    if (allowance >= Number(fields.amount)) {
+      setButtonText("Lock");
+    } else {
+      setButtonText("Approve");
+    }
+  }, [fields.amount, allowance, buttonText]);
 
   const onChangeHandler = (event: ChangeEvent<HTMLInputElement>) => {
     setShowBanner(false);
@@ -134,33 +179,37 @@ const CreateNewLock = () => {
             walletProvider
           );
 
-          console.log("TOKEN: ", tokenObj);
           const tokenInst = tokenObj.instance;
-          const signer = tokenObj.signer;
+          
+          if (buttonText === "Approve") {
+            const tokenApproval = await tokenInst.approve(
+              process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS,
+              amount
+            );
 
-          // const tokenWithSigner = tokenInst.connect(signer);
+            const approvalReceipt = await tokenApproval.wait();
 
-          const tokenApproval = await tokenInst.approve(
-            process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS,
-            amount
-          );
+            if (approvalReceipt.status === 1) {
 
-          const approvalReceipt = await tokenApproval.wait();
+              const tokenAllowance = await tokenInst.allowance(
+                ownerAddress,
+                process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
+              );
 
-          console.log("RECEIPT: ", approvalReceipt);
+              setAllowance(Number(BigInt(tokenAllowance) / 10n ** 18n));
 
-          // Submit lock transaction to blockchain
-          console.log(
-            "PREPED FIELDS: ",
-            owner,
-            token,
-            isLpToken,
-            amount,
-            unlockDate,
-            description
-          );
+              setShouldSubmit(false);
+              setShowBanner(true);
+              setBannerType("success");
+              setBannerMessage(`Token approval was successfully. Please click the "Lock" button to create new lock!`);
+            } else {
+              setShouldSubmit(false);
+              setShowBanner(true);
+              setBannerType("error");
+              setBannerMessage("Token approval failed!");
+            }
 
-          if (approvalReceipt.status === 1) {
+          } else {
             const lockTransX = await pinkLocker.lock(
               owner,
               token,
@@ -169,34 +218,23 @@ const CreateNewLock = () => {
               unlockDate,
               description
             );
-            console.log(
-              "HEEEEY LOCKED!",
-              owner,
-              token,
-              isLpToken,
-              amount,
-              unlockDate,
-              description
-            );
-  
+
             // Fetch lock transaction hash
             const lockTransXHash = lockTransX.hash;
             console.log("Lock Transaction Hash:", lockTransXHash);
-  
+
             setShowBanner(true);
             setBannerType("success");
             setBannerMessage(
               `Lock transaction submitted and awaiting confirmation!`
             );
-  
+
             // Waiting for the transaction to be mined
             const lockReceipt = await lockTransX.wait();
-  
-            // Log the transaction receipt
-            console.log("Deposit Transaction Receipt:", lockReceipt);
+
+            router.push(`/tokens`);
           }
 
-          router.push(`/tokens`);
         } catch (error: any) {
           setShouldSubmit(false);
           setShowBanner(true);
@@ -456,7 +494,7 @@ const CreateNewLock = () => {
                     ) : (
                       <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
                     )}
-                    <span className="hidden xs:block ml-2">Lock</span>
+                    <span className="hidden xs:block ml-2">{buttonText}</span>
                   </button>
                 </div>
               </div>

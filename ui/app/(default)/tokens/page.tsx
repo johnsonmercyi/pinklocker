@@ -17,6 +17,7 @@ import { Contract } from "ethers";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useWallet } from "./config/ValidateWalletConnection";
+import Table from "./ui/table/Table";
 
 type Lock = {
   index: number;
@@ -72,26 +73,8 @@ export default function Page() {
         endIndex
       );
 
-      // const convertedLocks: Lock[] =  [...locks]
-      //   .map((lock: any, index: any) => ({ index, ...lock }))
-      //   .reverse()
-      //   .map(async (lock: any, index: number) => {
-      //     const tokenObj = await tokenInstance(lock.token, walletProvider);
-      //     const symbol = await tokenObj.instance.symbol();
-      //     const name = await tokenObj.instance.name();
-
-      //     return {
-      //       index: lock.id,
-      //       token: lock.token,
-      //       name: name,
-      //       symbol: symbol,
-      //       factory: lock.factory,
-      //       amount: BigInt(lock.amount) / 10n ** 18n,
-      //     };
-      //   });
-
-      const convertedLocks: Lock[] = locks.map(
-        async (lock: any, index: number) => {
+      const convertedLocks: Lock[] = locks
+        .map(async (lock: any, index: number) => {
           const tokenObj = await tokenInstance(lock.token, walletProvider);
           const symbol = await tokenObj.instance.symbol();
           const name = await tokenObj.instance.name();
@@ -104,8 +87,8 @@ export default function Page() {
             factory: lock.factory,
             amount: BigInt(lock.amount) / 10n ** 18n,
           };
-        }
-      ).reverse();
+        })
+        .reverse();
 
       const resolvedLocks = await Promise.all(convertedLocks);
 
@@ -123,6 +106,14 @@ export default function Page() {
     router.push(`/tokens/create`);
   };
 
+  const handleColumnActionClick = (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    index: number | string | undefined
+  ) => {
+    e.stopPropagation();
+    router.push(`/tokens/${index}`);
+  };
+
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
       {normalLockCount > 0 ? (
@@ -135,6 +126,7 @@ export default function Page() {
                   <Transactions
                     locks={locks}
                     createNewLockHandler={createNewLockHandler}
+                    handleColumnActionClick={handleColumnActionClick}
                   />
                 </TransactionDetailProvider>
               </FlyoutProvider>
@@ -178,9 +170,14 @@ export default function Page() {
 function Transactions({
   locks,
   createNewLockHandler,
+  handleColumnActionClick,
 }: {
   locks: Lock[];
   createNewLockHandler: () => void;
+  handleColumnActionClick: (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    index: number | string | undefined
+  ) => void;
 }) {
   const transactions: Transaction[] = locks.map((lock: any) => ({
     index: lock.index,
@@ -221,7 +218,7 @@ function Transactions({
               >
                 <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
               </svg>
-              <span className="hidden xs:block ml-2">Lock New Lock</span>
+              <span className="hidden xs:block ml-2">Create New Lock</span>
             </button>
           </div>
         </div>
@@ -243,9 +240,17 @@ function Transactions({
         </div>
 
         {/* Table */}
-        <OrdersTable
+        <Table
           headers={["Token", "Amount", "Action"]}
-          transactions={transactions}
+          title="Acumulative Locks"
+          transactions={transactions.map((tranX: Transaction) => {
+            return {
+              token: tranX.token,
+              amount: tranX.amount,
+            };
+          })}
+          routeParams={transactions.map((tranX: Transaction) => tranX.index)}
+          clickHandler={handleColumnActionClick}
         />
 
         {/* Pagination */}

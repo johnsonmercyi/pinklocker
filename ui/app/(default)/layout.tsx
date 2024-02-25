@@ -1,9 +1,10 @@
-import Sidebar from "@/components/ui/sidebar";
+
 import Header from "@/components/ui/header";
 import { Web3ModalProvider } from "@/app/(default)/tokens/config/Web3ModalConfig";
 import { ValidateWalletConnect } from "./tokens/config/ValidateWalletConnection";
 import { DateContext } from "./tokens/context/DateContext";
 import { DatePickerProvider } from "./tokens/context/DateProvider";
+import Sidebar from "@/components/ui/tokens-ui/sidebar";
 
 export default function DefaultLayout({
   children,

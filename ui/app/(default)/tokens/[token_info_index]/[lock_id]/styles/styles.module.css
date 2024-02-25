@@ -1,6 +1,6 @@
 /*Mobile First Style*/
-.listCard, .table {
-  margin-bottom: 1rem;
+.listCard {
+  margin-bottom: 1rem
 }
 
 /*Devices larger than mobile phone*/

@@ -9,16 +9,16 @@ const TableItem = ({
   actionText,
 }: {
   transaction: any;
-  clickHandler: (e: React.MouseEvent) => void;
+  clickHandler: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
   image: string;
   actionText: string;
   alt?: string;
 }) => {
-  const isEmpty = Object.keys(transaction).length > 0;
+  const isNotEmpty = Object.keys(transaction).length > 0;
   const { statusColor, amountColor } = TransactionsProperties();
   return (
     <tr>
-      {!isEmpty ? (
+      {isNotEmpty ? (
         image ? (
           <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap md:w-1/2">
             <div className="flex items-center">
@@ -44,18 +44,27 @@ const TableItem = ({
           <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap md:w-1/2">
             <div className="font-medium text-slate-800 dark:text-slate-100">
               <button onClick={(e) => clickHandler(e)}>
-                {transaction.name}
+                {transaction[Object.keys(transaction)[0]]}
               </button>
             </div>
           </td>
         )
       ) : null}
 
-      {!isEmpty
-        ? Object.keys(transaction).map((key) => {
+      {isNotEmpty
+        ? Object.keys(transaction).map((key, index) => {
+            // The first column had been render above
+            if (index === 0) {
+              return null;
+            }
+
+            // So subsequest rendering should start here
             if (key === "amount") {
               return (
-                <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
+                <td
+                  key={key + "_" + index}
+                  className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px"
+                >
                   <div
                     className={`text-left font-medium ${amountColor(
                       transaction.amount
@@ -67,9 +76,12 @@ const TableItem = ({
               );
             }
             return (
-              <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
+              <td
+                key={key + "_" + index}
+                className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px"
+              >
                 <div className={`text-left font-medium`}>
-                  {Number(transaction[key])}
+                  {transaction[key]}
                 </div>
               </td>
             );
@@ -77,7 +89,7 @@ const TableItem = ({
         : null}
 
       {/* Action button */}
-      {!isEmpty ? (
+      {isNotEmpty ? (
         <td className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap w-px">
           <div className="flex items-center">
             <div className="font-normal text-indigo-400 dark:text-indigo-400 dark:hover:text-indigo-300">

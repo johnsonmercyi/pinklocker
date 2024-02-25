@@ -1,0 +1,25 @@
+/*Mobile First Style*/
+.main {
+  width: 100%;
+  height: 10rem;
+
+  margin-bottom: 1rem;
+}
+
+.timersWrapper {
+  width: 100%;
+  height: auto;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.timeWrapper {
+  margin: 0 0.5rem;
+}
+
+/*Devices larger than mobile phone*/
+@media (min-width: 576px) {
+
+}
