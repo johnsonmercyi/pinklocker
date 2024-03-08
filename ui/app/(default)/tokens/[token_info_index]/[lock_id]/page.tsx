@@ -39,8 +39,8 @@ const ViewLocks = () => {
   useEffect(() => {
     const initTokenAndLockDetails = async () => {
       if (lockId) {
-        if (walletProvider) {
-          const pinkLock = await pinkLockInstance(walletProvider);
+        // if (walletProvider) {
+          const pinkLock = await pinkLockInstance(walletProvider || null);
           const lockRecord = await pinkLock.getLockById(Number(param.lock_id));
 
           const convertedLockInfo: LockRecordsInfo = {
@@ -71,7 +71,7 @@ const ViewLocks = () => {
 
           const tokenObj = await tokenInstance(
             convertedLockInfo.token,
-            walletProvider
+            walletProvider || null
           );
           const instance = tokenObj.instance;
           const name = await instance.name();
@@ -82,7 +82,7 @@ const ViewLocks = () => {
           setTokenName(name);
           setTokenSymbol(symbol);
           setTokenDecimal(Number(decimal));
-        }
+        // }
       } else {
         console.log(param.lock_id);
         setLockId(Number(param.lock_id));

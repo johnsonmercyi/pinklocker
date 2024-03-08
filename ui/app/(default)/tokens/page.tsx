@@ -42,29 +42,25 @@ export default function Page() {
 
   useEffect(() => {
     const fetchLocks = async () => {
-      if (walletProvider) {
-        const pinkLock = await pinkLockInstance(walletProvider);
-        const normalLockCount = await pinkLock.allNormalTokenLockedCount();
+      const pinkLock = await pinkLockInstance(walletProvider || null);
+      const normalLockCount = await pinkLock.allNormalTokenLockedCount();
 
-        setPinkLock(pinkLock);
-        setNormalLockCount(normalLockCount);
+      setPinkLock(pinkLock);
+      setNormalLockCount(normalLockCount);
 
-        // console.log("PINKLOCK: ", pinkLock);
-        console.log("COUNT: ", parseInt(normalLockCount));
+      // console.log("PINKLOCK: ", pinkLock);
+      console.log("COUNT: ", parseInt(normalLockCount));
 
-        if (normalLockCount > 0) {
-          getLocks(pinkLock);
-        }
+      if (normalLockCount > 0) {
+        getLocks(pinkLock);
       }
     };
 
-    if (isConnected) {
-      fetchLocks();
-    }
+    fetchLocks();
   }, [isConnected, page]);
 
   const getLocks = async (pinkLock: Contract | undefined) => {
-    if (walletProvider) {
+    // if (walletProvider) {
       // Get start and end index
       const startIndex = page * PAGE_SIZE;
       const endIndex = (page + 1) * PAGE_SIZE - 1;
@@ -75,7 +71,7 @@ export default function Page() {
 
       const convertedLocks: Lock[] = locks
         .map(async (lock: any, index: number) => {
-          const tokenObj = await tokenInstance(lock.token, walletProvider);
+          const tokenObj = await tokenInstance(lock.token, walletProvider || null);
           const symbol = await tokenObj.instance.symbol();
           const name = await tokenObj.instance.name();
 
@@ -94,7 +90,7 @@ export default function Page() {
 
       console.log("LOCKS: ", resolvedLocks);
       setLocks(resolvedLocks);
-    }
+    // }
   };
 
   const paginateHandler = (newPage: number): void => {

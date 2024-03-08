@@ -37,8 +37,8 @@ const ViewToken = () => {
   useEffect(() => {
     const fetchTokenDetails = async () => {
       if (tokenInfoIndex >= 0) {
-        if (walletProvider) {
-          const pinkLock = await pinkLockInstance(walletProvider);
+        // if (walletProvider) {
+          const pinkLock = await pinkLockInstance(walletProvider || null);
           const tokenInfo = await pinkLock.getCumulativeNormalTokenLockInfoAt(
             tokenInfoIndex
           );
@@ -51,7 +51,7 @@ const ViewToken = () => {
 
           setToken(convertedTokenInfo.token);
           setLockAmount(convertedTokenInfo.amount);
-        }
+        // }
       } else {
         setTokenInfoIndex(Number(param.token_info_index as string));
       }
@@ -62,8 +62,8 @@ const ViewToken = () => {
 
   useEffect(() => {
     const initTokenDetails = async () => {
-      if (token && walletProvider) {
-        const tokenObj = await tokenInstance(token, walletProvider);
+      if (token) {
+        const tokenObj = await tokenInstance(token, walletProvider || null);
         // console.log("TOKEN OBJECT: ", tokenObj);
         const instance = tokenObj.instance;
         const name = await instance.name();
@@ -78,8 +78,8 @@ const ViewToken = () => {
 
     const initLockRecords = async () => {
       await initTokenDetails();
-      if (token && walletProvider) {
-        const pinkLock = await pinkLockInstance(walletProvider);
+      if (token) {
+        const pinkLock = await pinkLockInstance(walletProvider || null);
         /**
          * ⚠️TODO: The `0 - 10` should be dynamically passed not hardcoded
          */

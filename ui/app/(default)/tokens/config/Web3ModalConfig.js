@@ -4,6 +4,7 @@ import { createWeb3Modal, defaultConfig } from '@web3modal/ethers/react';
 
 // Web3Modal developer project id
 const projectId = 'a8b05f96035d83f51b664ade0542d49e';
+const bscTestnetRpcUrl = 'https://data-seed-prebsc-2-s3.binance.org:8545/';
 
 const mainnet = {
   chainId: 1,
@@ -18,7 +19,7 @@ const bscTestnet = {
   name: 'Binance Smart Chain Testnet',
   currency: 'BNB',
   explorerUrl: 'https://testnet.bscscan.com',
-  rpcUrl: 'https://data-seed-prebsc-2-s3.binance.org:8545/',
+  rpcUrl: bscTestnetRpcUrl,
 };
 
 
@@ -37,7 +38,7 @@ const metadata = {
   icons: [''],
 };
 
-createWeb3Modal({
+export const web3Modal = createWeb3Modal({
   ethersConfig: defaultConfig({ metadata }),
   chains: [bscTestnet],
   projectId,
