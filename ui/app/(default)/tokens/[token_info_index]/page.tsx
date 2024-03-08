@@ -73,7 +73,7 @@ const ViewToken = () => {
 
         setTokenName(name);
         setTokenSymbol(symbol);
-        setTokenDecimal(Number(decimal));te
+        setTokenDecimal(Number(decimal));
       }
     };
 
