@@ -75,7 +75,7 @@ export default function TransactionPanel() {
           <div className="py-8 px-4 lg:px-8">
             <div className="max-w-sm mx-auto lg:max-w-none">
               <div className="text-slate-800 dark:text-slate-100 font-semibold text-center mb-1">Bank Transfer</div>
-              <div className="text-sm text-center italic">{transaction.date}, 8:56 PM</div>
+              <div className="text-sm text-center italic">8:56 PM</div>
               {/* Details */}
               <div className="drop-shadow-lg mt-12">
                 {/* Top */}
@@ -85,7 +85,7 @@ export default function TransactionPanel() {
                   </div>
                   <div className={`text-2xl font-semibold mb-1 ${amountColor(transaction.amount)}`}>{transaction?.amount}</div>
                   <div className="text-sm font-medium text-slate-800 dark:text-slate-100 mb-3">{transaction.name}</div>
-                  <div className={`text-xs inline-flex font-medium rounded-full text-center px-2.5 py-1 ${statusColor(transaction.status)}`}>{transaction.status}</div>
+                  <div className={`text-xs inline-flex font-medium rounded-full text-center px-2.5 py-1 ${statusColor("")}`}></div>
                 </div>
                 {/* Divider */}
                 <div className="flex justify-between items-center" aria-hidden="true">
