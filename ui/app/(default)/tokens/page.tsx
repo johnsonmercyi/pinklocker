@@ -55,46 +55,108 @@ export default function Page() {
   const [fetchLockType, setFetchLockType] = useState<"all" | "user">("all");
   const [applicationReady, setApplicationReady] = useState<boolean>(false);
   const [tableLoading, setTableLoading] = useState<boolean>(false);
+  const [searchText, setSearchText] = useState<string>("");
 
   useEffect(() => {
-    const fetchLocks = async () => {
-      const pinkLock = await pinkLockInstance(walletProvider || null);
-      const normalLockCount = await pinkLock.allNormalTokenLockedCount();
-
-      setPinkLock(pinkLock);
-      setNormalLockCount(normalLockCount);
-
-      // console.log("PINKLOCK: ", pinkLock);
-      console.log("COUNT: ", parseInt(normalLockCount));
-
-      if (normalLockCount > 0) {
-        getLocks(pinkLock);
-      }
-    };
-
-    const fetchUserLocks = async () => {
-      console.log("Fetching user locks...");
-      if (isConnected) {
-        const pinkLock = await pinkLockInstance(walletProvider || null);
-        const lockCount = await pinkLock.normalLockCountForUser(address);
-
-        setPinkLock(pinkLock);
-        setNormalLockCount(lockCount);
-
-        console.log("USER LOCK COUNT: ", parseInt(lockCount));
-
-        if (normalLockCount > 0) {
-          getLocks(pinkLock, address);
-        }
-      }
-    };
-
     if (fetchLockType === "all") {
       fetchLocks();
     } else if (fetchLockType === "user") {
-      fetchUserLocks();
+      fetchUserLocks(isConnected);
     }
   }, [isConnected, fetchLockType, page]);
+
+  useEffect(() => {
+    if (searchText.trim().length === 0) {
+      if (fetchLockType === "all") {
+        setTableLoading(true);
+        fetchLocks();
+      } else if (fetchLockType === "user") {
+        if (isConnected) {
+          setTableLoading(true);
+          fetchUserLocks(isConnected);
+        } else {
+          setApplicationReady(false);
+          open();
+        }
+      }
+    }
+  }, [searchText]);
+
+  const fetchLocks = async () => {
+    const pinkLock = await pinkLockInstance(walletProvider || null);
+    const normalLockCount = await pinkLock.allNormalTokenLockedCount();
+
+    setPinkLock(pinkLock);
+    setNormalLockCount(normalLockCount);
+
+    // console.log("PINKLOCK: ", pinkLock);
+    console.log("COUNT: ", parseInt(normalLockCount));
+
+    if (normalLockCount > 0) {
+      getLocks(pinkLock);
+    }
+  };
+
+  const fetchUserLocks = async (isConnected: boolean) => {
+    console.log("Fetching user locks...");
+    if (isConnected) {
+      const pinkLock = await pinkLockInstance(walletProvider || null);
+      const lockCount = await pinkLock.normalLockCountForUser(address);
+
+      setPinkLock(pinkLock);
+      setNormalLockCount(lockCount);
+
+      console.log("USER LOCK COUNT: ", parseInt(lockCount));
+
+      if (lockCount > 0) {
+        getLocks(pinkLock, address);
+      }
+    }
+  };
+
+  const searchChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchText(event.target.value);
+  };
+
+  const searchSubmitHandler = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    try {
+      if (pinkLock) {
+        if (searchText.trim().length > 0) {
+          setTableLoading(true);
+          const tokenLockCount = await pinkLock.totalLockCountForToken(
+            searchText
+          );
+
+          console.log("COUNT: ", tokenLockCount);
+
+          setNormalLockCount(tokenLockCount);
+
+          if (tokenLockCount > 0) {
+            getLocks(pinkLock);
+          } else {
+            setLocks([]);
+          }
+        }
+      } else {
+        const pinkLock = await pinkLockInstance(walletProvider || null);
+        const tokenLockCount = await pinkLock.totalLockCountForToken(
+          searchText
+        );
+
+        setPinkLock(pinkLock);
+        setNormalLockCount(tokenLockCount);
+
+        if (tokenLockCount > 0) {
+          getLocks(pinkLock);
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const getLocks = async (pinkLock: Contract | undefined, user?: string) => {
     // if (walletProvider) {
@@ -122,7 +184,7 @@ export default function Page() {
         }))
         .reverse();
 
-      // console.log("Converted Locks: ", convertedLocksInfo);
+      console.log("Converted Locks: ", convertedLocksInfo);
       setLocks(convertedLocksInfo);
       setApplicationReady(true);
       setTableLoading(false);
@@ -170,9 +232,7 @@ export default function Page() {
       } else {
         try {
           await open();
-          if (isConnected) {
-            setFetchLockType(type);
-          }
+          setFetchLockType(type);
         } catch (error) {
           console.log(error);
         }
@@ -199,7 +259,7 @@ export default function Page() {
     e.stopPropagation();
     console.log("INDEX: ", index, "ID: ", id);
     if (fetchLockType === "all") {
-      router.push(`/tokens/${index}@`);
+      router.push(`/tokens/${index}`);
     } else {
       router.push(`/tokens/${index}/${id}`);
     }
@@ -208,57 +268,83 @@ export default function Page() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
       {applicationReady ? (
-        locks.length > 0 ? (
-          <>
-            {/* Cards */}
-            <div className="grid  gap-6">
-              <SelectedItemsProvider>
-                <FlyoutProvider>
-                  <TransactionDetailProvider>
-                    <Transactions
-                      locks={locks}
-                      createNewLockHandler={createNewLockHandler}
-                      handleColumnActionClick={handleColumnActionClick}
-                      locksFetchHandler={locksFetchHandler}
-                      fetchLockType={fetchLockType}
-                      tableLoading={tableLoading}
-                    />
-                  </TransactionDetailProvider>
-                </FlyoutProvider>
-              </SelectedItemsProvider>
-            </div>
-          </>
-        ) : (
-          <>
-            <WelcomeBanner
-              title="Hey Welcome!👋."
-              subtitle={`The space is empty. Be the first to Lock New Tokens today!`}
-            />
-
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-            >
-              <button
-                className="btn dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-indigo-500"
-                onClick={createNewLockHandler}
-              >
-                <svg
-                  className="w-4 h-4 fill-current opacity-50 shrink-0"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
-                </svg>
-                <span className="hidden xs:block ml-2">Lock New Token</span>
-              </button>
-            </div>
-          </>
-        )
+        // locks.length > 0 || searchText.trim().length > 0 ? (
+        //   <>
+        //     {/* Cards */}
+        //     <div className="grid  gap-6">
+        //       <SelectedItemsProvider>
+        //         <FlyoutProvider>
+        //           <TransactionDetailProvider>
+        //             <Transactions
+        //               locks={locks}
+        //               createNewLockHandler={createNewLockHandler}
+        //               handleColumnActionClick={handleColumnActionClick}
+        //               locksFetchHandler={locksFetchHandler}
+        //               fetchLockType={fetchLockType}
+        //               tableLoading={tableLoading}
+        //               searchText={searchText}
+        //               searchChangeHandler={searchChangeHandler}
+        //               searchSubmitHandler={searchSubmitHandler}
+        //             />
+        //           </TransactionDetailProvider>
+        //         </FlyoutProvider>
+        //       </SelectedItemsProvider>
+        //     </div>
+        //   </>
+        // )
+        <>
+          {/* Cards */}
+          <div className="grid  gap-6">
+            <SelectedItemsProvider>
+              <FlyoutProvider>
+                <TransactionDetailProvider>
+                  <Transactions
+                    locks={locks}
+                    createNewLockHandler={createNewLockHandler}
+                    handleColumnActionClick={handleColumnActionClick}
+                    locksFetchHandler={locksFetchHandler}
+                    fetchLockType={fetchLockType}
+                    tableLoading={tableLoading}
+                    searchText={searchText}
+                    searchChangeHandler={searchChangeHandler}
+                    searchSubmitHandler={searchSubmitHandler}
+                  />
+                </TransactionDetailProvider>
+              </FlyoutProvider>
+            </SelectedItemsProvider>
+          </div>
+        </>
       ) : (
+        // : (
+        //   <>
+        //     <WelcomeBanner
+        //       title="Hey Welcome!👋."
+        //       subtitle={`The space is empty. Be the first to Lock New Tokens today!`}
+        //     />
+
+        //     <div
+        //       style={{
+        //         width: "100%",
+        //         display: "flex",
+        //         justifyContent: "center",
+        //         alignItems: "center",
+        //       }}
+        //     >
+        //       <button
+        //         className="btn dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-indigo-500"
+        //         onClick={createNewLockHandler}
+        //       >
+        //         <svg
+        //           className="w-4 h-4 fill-current opacity-50 shrink-0"
+        //           viewBox="0 0 16 16"
+        //         >
+        //           <path d="M15 7H9V1c0-.6-.4-1-1-1S7 .4 7 1v6H1c-.6 0-1 .4-1 1s.4 1 1 1h6v6c0 .6.4 1 1 1s1-.4 1-1V9h6c.6 0 1-.4 1-1s-.4-1-1-1z" />
+        //         </svg>
+        //         <span className="hidden xs:block ml-2">Lock New Token</span>
+        //       </button>
+        //     </div>
+        //   </>
+        // )
         <PageLoader text="Loading..." />
       )}
     </div>
@@ -272,6 +358,9 @@ function Transactions({
   locksFetchHandler,
   fetchLockType,
   tableLoading,
+  searchText,
+  searchChangeHandler,
+  searchSubmitHandler,
 }: {
   locks: TokenLock[] | LockRecordsInfo[];
   createNewLockHandler: () => void;
@@ -283,6 +372,9 @@ function Transactions({
   locksFetchHandler: (type: "all" | "user") => void;
   fetchLockType: "all" | "user";
   tableLoading: boolean;
+  searchText: string;
+  searchChangeHandler: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  searchSubmitHandler: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   console.log(locks);
   const transactions: Transaction[] = locks.map((lock: any) => {
@@ -325,7 +417,12 @@ function Transactions({
           <div className="grid grid-flow-col sm:auto-cols-max justify-start sm:justify-end gap-2">
             {/* Search form */}
             <div className="hidden sm:block">
-              <SearchForm placeholder="Search by token address" />
+              <SearchForm
+                placeholder="Search by token address"
+                value={searchText}
+                onChangeHandler={searchChangeHandler}
+                onSubmitHandler={searchSubmitHandler}
+              />
             </div>
 
             {/* Add account button */}
@@ -395,9 +492,11 @@ function Transactions({
         />
 
         {/* Pagination */}
-        <div className="mt-8">
-          <PaginationClassic />
-        </div>
+        {locks.length > 0 ? (
+          <div className="mt-8">
+            <PaginationClassic />
+          </div>
+        ) : null}
       </div>
 
       {/* <TransactionPanel /> */}

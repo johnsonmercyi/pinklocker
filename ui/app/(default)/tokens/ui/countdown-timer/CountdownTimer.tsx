@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import styles from './styles.module.css';
+import styles from "./styles.module.css";
 
 interface Props {
   targetTimestamp: number;
@@ -8,11 +8,16 @@ interface Props {
   title: string;
 }
 
-const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) => {
+const CountdownTimer: React.FC<Props> = ({
+  targetTimestamp,
+  className,
+  title,
+}) => {
   const [days, setDays] = useState(0);
   const [hours, setHours] = useState(0);
   const [minutes, setMinutes] = useState(0);
   const [seconds, setSeconds] = useState(0);
+  const [isExpired, setIsExpired] = useState<boolean>(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -20,6 +25,7 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
       let diff = targetTimestamp - now;
 
       if (diff <= 0) {
+        setIsExpired(true);
         clearInterval(interval);
         return;
       }
@@ -58,6 +64,10 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
     return () => clearInterval(interval);
   }, [seconds, targetTimestamp]);
 
+  useEffect(() => {
+    console.log("EXPIRED: ", isExpired);
+  }, [isExpired]);
+
   return (
     <div>
       <div
@@ -72,9 +82,13 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
         </header>
         <div className="p-3">
           <div className={styles.timersWrapper}>
-            <div className={styles.timeWrapper}>
+            <div className={`${styles.timeWrapper}`}>
               <span
-                className={`px-2 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 bg-white ${
+                  isExpired
+                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
+                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
+                } text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {days.toString().padStart(2, "0")}
               </span>
@@ -82,7 +96,11 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${
+                  isExpired
+                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
+                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
+                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {hours.toString().padStart(2, "0")}
               </span>
@@ -90,7 +108,11 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${
+                  isExpired
+                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
+                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
+                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {minutes.toString().padStart(2, "0")}
               </span>
@@ -98,7 +120,11 @@ const CountdownTimer: React.FC<Props> = ({ targetTimestamp, className, title }) 
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${
+                  isExpired
+                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
+                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
+                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {seconds.toString().padStart(2, "0")}
               </span>

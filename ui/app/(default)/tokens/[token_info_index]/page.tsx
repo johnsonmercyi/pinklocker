@@ -12,6 +12,7 @@ import { useParams, useRouter } from "next/navigation";
 import { LockRecordsInfo } from "../interfaces/global";
 import Table from "../ui/table/Table";
 import { formatDate } from "@/app/(default)/tokens/utils/utility";
+import PageLoader from "../ui/loader/Loader";
 
 interface AcumulativeTokenInfo {
   token: string;
@@ -33,6 +34,7 @@ const ViewToken = () => {
   const [tokenDecimal, setTokenDecimal] = useState<number>(0);
 
   const [lockRecords, setLockRecords] = useState<LockRecordsInfo[]>([]);
+  const [applicationReady, setApplicationReady] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchTokenDetails = async () => {
@@ -51,6 +53,7 @@ const ViewToken = () => {
 
         setToken(convertedTokenInfo.token);
         setLockAmount(convertedTokenInfo.amount);
+        setApplicationReady(true);
         // }
       } else {
         setTokenInfoIndex(Number(param.token_info_index as string));
@@ -102,6 +105,7 @@ const ViewToken = () => {
         );
 
         setLockRecords(convertedLockInfo);
+        setApplicationReady(true);
       }
     };
 
@@ -118,62 +122,69 @@ const ViewToken = () => {
 
   return (
     <div className="relative bg-white dark:bg-slate-900 h-full">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
-            Token Details ✨
-          </h1>
-        </div>
-        <ListCard
-          className={styles.listCard}
-          title={"Lock Info"}
-          subTitle={tokenName}
-        >
-          <ListCardItem property="Current Locked Amount" value={lockAmount} />
-          <ListCardItem
-            property="Current Locked Value"
-            value={`$${lockValue}`}
-          />
-          <ListCardItem property="Token Address" value={token} />
-          <ListCardItem property="Token Name" value={tokenName} />
-          <ListCardItem property="Token Symbol" value={tokenSymbol} />
-          <ListCardItem property="Token Decimal" value={tokenDecimal} />
-        </ListCard>
-        {/* Wallet Amount Cycle(d) Cycle Release(%) TGE(%) Unlock time(UTC) */}
-        <Table
-          routeParams={lockRecords.map((lock: LockRecordsInfo) => ({
-            index: Number(lock.id),
-          }))}
-          title="Lock Records"
-          className={styles.table}
-          headers={[
-            "Wallet",
-            "Amount",
-            "Cycle(d)",
-            "Cycle Release(%)",
-            "TGE(%)",
-            "Unlock time(UTC)",
-            "Action",
-          ]}
-          clickHandler={viewLockRecordHandler}
-          transactions={lockRecords.map((lock: LockRecordsInfo) => {
-            const timeInMillis = lock.tgeDate * 1000;
-            const expDate = new Date(timeInMillis);
+      {
+        applicationReady ? (
+          <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
+            {/* Page header */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
+                Token Details ✨
+              </h1>
+            </div>
+            <ListCard
+              className={styles.listCard}
+              title={"Lock Info"}
+              subTitle={tokenName}
+            >
+              <ListCardItem property="Current Locked Amount" value={lockAmount} />
+              <ListCardItem
+                property="Current Locked Value"
+                value={`$${lockValue}`}
+              />
+              <ListCardItem property="Token Address" value={token} />
+              <ListCardItem property="Token Name" value={tokenName} />
+              <ListCardItem property="Token Symbol" value={tokenSymbol} />
+              <ListCardItem property="Token Decimal" value={tokenDecimal} />
+            </ListCard>
+            {/* Wallet Amount Cycle(d) Cycle Release(%) TGE(%) Unlock time(UTC) */}
+            <Table
+              routeParams={lockRecords.map((lock: LockRecordsInfo) => ({
+                index: Number(lock.id),
+              }))}
+              title="Lock Records"
+              className={styles.table}
+              headers={[
+                "Wallet",
+                "Amount",
+                "Cycle(d)",
+                "Cycle Release(%)",
+                "TGE(%)",
+                "Unlock time(UTC)",
+                "Action",
+              ]}
+              clickHandler={viewLockRecordHandler}
+              transactions={lockRecords.map((lock: LockRecordsInfo) => {
+                const timeInMillis = lock.tgeDate * 1000;
+                const expDate = new Date(timeInMillis);
 
-            return {
-              wallet: lock.owner,
-              amount: Number(BigInt(lock.amount) / 10n ** 18n),
-              cycle: lock.cycle,
-              cycleBps: lock.cycleBps,
-              tgeBps: lock.tgeBps,
-              tgeDate: formatDate(expDate),
-            };
-          })}
-        />
-      </div>
+                return {
+                  wallet: lock.owner,
+                  amount: Number(BigInt(lock.amount) / 10n ** 18n),
+                  cycle: lock.cycle,
+                  cycleBps: lock.cycleBps,
+                  tgeBps: lock.tgeBps,
+                  tgeDate: formatDate(expDate),
+                };
+              })}
+            />
+          </div>
+        ) : (
+          <PageLoader text="Loading..." />
+        )
+      }
     </div>
   );
+
 };
 
 export default ViewToken;

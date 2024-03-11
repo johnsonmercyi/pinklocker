@@ -11,6 +11,7 @@ import ListCard from "../../ui/listcard/ListCard";
 import styles from "./styles/styles.module.css";
 import ListCardItem from "../../ui/listcard/ListCardItem";
 import CountdownTimer from "../../ui/countdown-timer/CountdownTimer";
+import PageLoader from "../../ui/loader/Loader";
 
 const ViewLocks = () => {
   const param = useParams();
@@ -35,6 +36,8 @@ const ViewLocks = () => {
   const [lockUnlockDateInSeconds, setLockUnlockDateInSeconds] =
     useState<number>(0);
   const [lockUnlockedAmount, setLockUnlockedAmount] = useState<number>(0);
+
+  const [applicationReady, setApplicationReady] = useState<boolean>(false);
 
   useEffect(() => {
     const initTokenAndLockDetails = async () => {
@@ -82,6 +85,7 @@ const ViewLocks = () => {
           setTokenName(name);
           setTokenSymbol(symbol);
           setTokenDecimal(Number(decimal));
+          setApplicationReady(true);
         // }
       } else {
         console.log(param.lock_id);
@@ -94,51 +98,57 @@ const ViewLocks = () => {
 
   return (
     <div className="relative bg-white dark:bg-slate-900 h-full">
-      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
-            Lock Record Details ✨
-          </h1>
-        </div>
+      {
+        applicationReady ? (
+          <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
+            {/* Page header */}
+            <div className="mb-8">
+              <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
+                Lock Record Details ✨
+              </h1>
+            </div>
 
-        {/* ⚠️ Put a countdown timer here firstly */}
-        <CountdownTimer
-          targetTimestamp={lockUnlockDateInSeconds}
-          title="Unlock in"
-        />
+            {/* ⚠️ Put a countdown timer here firstly */}
+            <CountdownTimer
+              targetTimestamp={lockUnlockDateInSeconds}
+              title="Unlock in"
+            />
 
-        <ListCard
-          className={styles.listCard}
-          title={"Lock Info"}
-          subTitle={tokenName}
-        >
-          <ListCardItem property="Token Address" value={token} />
-          <ListCardItem property="Token Name" value={tokenName} />
-          <ListCardItem property="Token Symbol" value={tokenSymbol} />
-          <ListCardItem property="Token Decimal" value={tokenDecimal} />
-        </ListCard>
+            <ListCard
+              className={styles.listCard}
+              title={"Lock Info"}
+              subTitle={tokenName}
+            >
+              <ListCardItem property="Token Address" value={token} />
+              <ListCardItem property="Token Name" value={tokenName} />
+              <ListCardItem property="Token Symbol" value={tokenSymbol} />
+              <ListCardItem property="Token Decimal" value={tokenDecimal} />
+            </ListCard>
 
-        <ListCard
-          className={styles.listCard}
-          title={"Lock Info"}
-          subTitle={lockTitle}
-        >
-          <ListCardItem property="Title" value={lockTitle} />
-          <ListCardItem
-            property="Total Amount Locked"
-            value={`${lockAmount} ${tokenSymbol}`}
-          />
-          <ListCardItem property="Total Value Locked" value={`$${lockValue}`} />
-          <ListCardItem property="Owner" value={lockOwner} />
-          <ListCardItem property="Lock Date" value={lockDate} />
-          <ListCardItem property="Unlock Date" value={lockUnlockDate} />
-          <ListCardItem
-            property="Unlocked Amount"
-            value={`${lockUnlockedAmount} ${tokenSymbol}`}
-          />
-        </ListCard>
-      </div>
+            <ListCard
+              className={styles.listCard}
+              title={"Lock Info"}
+              subTitle={lockTitle}
+            >
+              <ListCardItem property="Title" value={lockTitle} />
+              <ListCardItem
+                property="Total Amount Locked"
+                value={`${lockAmount} ${tokenSymbol}`}
+              />
+              <ListCardItem property="Total Value Locked" value={`$${lockValue}`} />
+              <ListCardItem property="Owner" value={lockOwner} />
+              <ListCardItem property="Lock Date" value={lockDate} />
+              <ListCardItem property="Unlock Date" value={lockUnlockDate} />
+              <ListCardItem
+                property="Unlocked Amount"
+                value={`${lockUnlockedAmount} ${tokenSymbol}`}
+              />
+            </ListCard>
+          </div>
+        ) : (
+          <PageLoader text="Loading..." />
+        )
+      }
     </div>
   );
 };
