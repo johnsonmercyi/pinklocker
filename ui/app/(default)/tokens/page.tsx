@@ -1,7 +1,5 @@
 "use client";
 
-import WelcomeBanner from "./welcome-banner";
-
 import { FlyoutProvider } from "@/app/flyout-context";
 import { SelectedItemsProvider } from "@/app/selected-items-context";
 import SearchForm from "@/components/search-form";
@@ -9,16 +7,16 @@ import { TransactionDetailProvider } from "./ui/table/transaction-context";
 
 import tokenInstance from "@/blockchain/config/ERC20";
 import pinkLockInstance from "@/blockchain/config/PinkLock";
-import PaginationClassic from "@/components/pagination-classic";
 import Image01 from "@/public/images/transactions-image-01.svg";
-import { useWeb3Modal, useWeb3ModalProvider } from "@web3modal/ethers/react";
+import { useWeb3Modal } from "@web3modal/ethers/react";
 import { Contract } from "ethers";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useWallet } from "./config/ValidateWalletConnection";
-import Table, { Transaction } from "./ui/table/Table";
 import { LockRecordsInfo } from "./interfaces/global";
 import PageLoader from "./ui/loader/Loader";
+import Table, { Transaction } from "./ui/table/Table";
+import PaginationClassic from "./ui/pagination/Pagination";
 
 type TokenLock = {
   index: number;
@@ -50,6 +48,8 @@ export default function Page() {
 
   const [locks, setLocks] = useState<TokenLock[] | LockRecordsInfo[]>([]);
   const [page, setPage] = useState<number>(0);
+  const [startIndex, setStartIndex] = useState<number>(0);
+  const [endIndex, setEndIndex] = useState<number>(0);
   const [pinkLock, setPinkLock] = useState<Contract>();
   const [normalLockCount, setNormalLockCount] = useState<number>(0);
   const [fetchLockType, setFetchLockType] = useState<"all" | "user">("all");
@@ -63,7 +63,7 @@ export default function Page() {
     } else if (fetchLockType === "user") {
       fetchUserLocks(isConnected);
     }
-  }, [isConnected, fetchLockType, page]);
+  }, [isConnected, fetchLockType]);
 
   useEffect(() => {
     if (searchText.trim().length === 0) {
@@ -81,6 +81,10 @@ export default function Page() {
       }
     }
   }, [searchText]);
+
+  useEffect(() => {
+    console.log(page, startIndex, endIndex);
+  }, [page, startIndex, endIndex]);
 
   const fetchLocks = async () => {
     const pinkLock = await pinkLockInstance(walletProvider || null);
@@ -157,6 +161,14 @@ export default function Page() {
       console.log(error);
     }
   };
+
+  const updateForDataFetch = (page:number, startIndex: number, endIndex: number) => {
+    setPage(page);
+    setStartIndex(startIndex);
+    setEndIndex(endIndex);
+  };
+
+  const previousPageHandler = () => {};
 
   const getLocks = async (pinkLock: Contract | undefined, user?: string) => {
     // if (walletProvider) {
@@ -300,6 +312,7 @@ export default function Page() {
                 <TransactionDetailProvider>
                   <Transactions
                     locks={locks}
+                    totalNumberOfItems={Number(normalLockCount)}
                     createNewLockHandler={createNewLockHandler}
                     handleColumnActionClick={handleColumnActionClick}
                     locksFetchHandler={locksFetchHandler}
@@ -308,6 +321,8 @@ export default function Page() {
                     searchText={searchText}
                     searchChangeHandler={searchChangeHandler}
                     searchSubmitHandler={searchSubmitHandler}
+                    updateParentComponent={updateForDataFetch}
+                    pageSize={PAGE_SIZE}
                   />
                 </TransactionDetailProvider>
               </FlyoutProvider>
@@ -353,6 +368,7 @@ export default function Page() {
 
 function Transactions({
   locks,
+  totalNumberOfItems,
   createNewLockHandler,
   handleColumnActionClick,
   locksFetchHandler,
@@ -361,8 +377,11 @@ function Transactions({
   searchText,
   searchChangeHandler,
   searchSubmitHandler,
+  updateParentComponent,
+  pageSize,
 }: {
   locks: TokenLock[] | LockRecordsInfo[];
+  totalNumberOfItems: number;
   createNewLockHandler: () => void;
   handleColumnActionClick: (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
@@ -375,6 +394,12 @@ function Transactions({
   searchText: string;
   searchChangeHandler: (event: React.ChangeEvent<HTMLInputElement>) => void;
   searchSubmitHandler: (event: React.FormEvent<HTMLFormElement>) => void;
+  updateParentComponent: (
+    page: number,
+    startIndex: number,
+    endIndex: number
+  ) => void;
+  pageSize: number;
 }) {
   console.log(locks);
   const transactions: Transaction[] = locks.map((lock: any) => {
@@ -494,12 +519,15 @@ function Transactions({
         {/* Pagination */}
         {locks.length > 0 ? (
           <div className="mt-8">
-            <PaginationClassic />
+            <PaginationClassic
+              pageSize={pageSize}
+              updateParentComponent={updateParentComponent}
+              numberOfItems={locks.length}
+              totalNumberOfItems={totalNumberOfItems}
+            />
           </div>
         ) : null}
       </div>
-
-      {/* <TransactionPanel /> */}
     </div>
   );
 }

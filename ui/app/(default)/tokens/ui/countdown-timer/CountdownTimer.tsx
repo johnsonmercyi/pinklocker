@@ -68,6 +68,10 @@ const CountdownTimer: React.FC<Props> = ({
     console.log("EXPIRED: ", isExpired);
   }, [isExpired]);
 
+  const expiredClasses = isExpired
+    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
+    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30";
+
   return (
     <div>
       <div
@@ -82,13 +86,9 @@ const CountdownTimer: React.FC<Props> = ({
         </header>
         <div className="p-3">
           <div className={styles.timersWrapper}>
-            <div className={`${styles.timeWrapper}`}>
+            <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 bg-white ${
-                  isExpired
-                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
-                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
-                } text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 bg-white ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {days.toString().padStart(2, "0")}
               </span>
@@ -96,11 +96,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${
-                  isExpired
-                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
-                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
-                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {hours.toString().padStart(2, "0")}
               </span>
@@ -108,11 +104,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${
-                  isExpired
-                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
-                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
-                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {minutes.toString().padStart(2, "0")}
               </span>
@@ -120,11 +112,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${
-                  isExpired
-                    ? "bg-lime-300 dark:bg-lime-300 bg-opacity-30 dark:bg-opacity-30"
-                    : "bg-red-400 dark:bg-red-400 bg-opacity-30 dark:bg-opacity-30"
-                } bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {seconds.toString().padStart(2, "0")}
               </span>

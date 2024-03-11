@@ -3,7 +3,31 @@
   margin-bottom: 1rem
 }
 
-/*Devices larger than mobile phone*/
-@media (min-width: 576px) {
-
+.listCard.mb0 {
+  margin-bottom: 0;
 }
+
+.wrapper,
+.buttonContainer {
+  width : 100%;
+  display        : flex;
+  justify-content: center;
+  align-items    : center;
+}
+
+.banner {
+  width: 100% !important;
+  padding: 0.5rem 2rem;
+}
+
+.wrapper {
+  flex-direction: column;
+}
+
+
+.buttonIcon {
+  margin: 0 0.3rem;
+}
+
+/*Devices larger than mobile phone*/
+@media (min-width: 576px) {}

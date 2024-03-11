@@ -123,4 +123,8 @@ export function isLockRecordsInfo(object: any): object is LockRecordsInfo {
   );
 }
 
+export function formatNumber(number: number): string {
+  return new Intl.NumberFormat().format(number);
+}
+
 export const ID_PADDING = 1_000_000n;
