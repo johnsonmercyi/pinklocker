@@ -2,7 +2,7 @@
 
 import tokenInstance from "@/blockchain/config/ERC20";
 import pinkLockInstance from "@/blockchain/config/PinkLock";
-import { formatDate, secondsToDate } from "@/components/utils/utility";
+import { formatDate, secondsToDate } from "@/app/(default)/tokens/utils/utility";
 import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";

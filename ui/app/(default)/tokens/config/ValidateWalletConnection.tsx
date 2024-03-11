@@ -44,7 +44,8 @@ export const ValidateWalletConnect = ({
         balance,
         address,
         isConnected,
-        networkSymbol
+        networkSymbol,
+        walletProvider,
       }}
     >
       {children}

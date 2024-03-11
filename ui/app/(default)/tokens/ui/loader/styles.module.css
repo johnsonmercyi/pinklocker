@@ -1,0 +1,16 @@
+/*Mobile First Style*/
+.main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  padding: 2rem;
+
+  font-size: 1rem;
+}
+
+/*Devices larger than mobile phone*/
+@media (min-width: 576px) {
+
+}

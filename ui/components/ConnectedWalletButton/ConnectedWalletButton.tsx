@@ -1,5 +1,5 @@
 import { useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
-import { Icon } from "../utils/utility";
+import { Icon } from "../../app/(default)/tokens/utils/utility";
 import styles from "./styles.module.css";
 import { useEffect, useState } from "react";
 

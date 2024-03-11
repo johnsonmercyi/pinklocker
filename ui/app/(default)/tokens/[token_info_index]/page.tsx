@@ -11,7 +11,7 @@ import { useWeb3ModalProvider } from "@web3modal/ethers/react";
 import { useParams, useRouter } from "next/navigation";
 import { LockRecordsInfo } from "../interfaces/global";
 import Table from "../ui/table/Table";
-import { formatDate } from "@/components/utils/utility";
+import { formatDate } from "@/app/(default)/tokens/utils/utility";
 
 interface AcumulativeTokenInfo {
   token: string;
@@ -38,19 +38,19 @@ const ViewToken = () => {
     const fetchTokenDetails = async () => {
       if (tokenInfoIndex >= 0) {
         // if (walletProvider) {
-          const pinkLock = await pinkLockInstance(walletProvider || null);
-          const tokenInfo = await pinkLock.getCumulativeNormalTokenLockInfoAt(
-            tokenInfoIndex
-          );
+        const pinkLock = await pinkLockInstance(walletProvider || null);
+        const tokenInfo = await pinkLock.getCumulativeNormalTokenLockInfoAt(
+          tokenInfoIndex
+        );
 
-          const convertedTokenInfo: AcumulativeTokenInfo = {
-            token: tokenInfo[0],
-            factory: tokenInfo[1],
-            amount: Number(BigInt(tokenInfo[2]) / 10n ** 18n),
-          };
+        const convertedTokenInfo: AcumulativeTokenInfo = {
+          token: tokenInfo[0],
+          factory: tokenInfo[1],
+          amount: Number(BigInt(tokenInfo[2]) / 10n ** 18n),
+        };
 
-          setToken(convertedTokenInfo.token);
-          setLockAmount(convertedTokenInfo.amount);
+        setToken(convertedTokenInfo.token);
+        setLockAmount(convertedTokenInfo.amount);
         // }
       } else {
         setTokenInfoIndex(Number(param.token_info_index as string));
@@ -108,7 +108,10 @@ const ViewToken = () => {
     initLockRecords();
   }, [token, walletProvider]);
 
-  const viewLockRecordHandler = (event: React.MouseEvent, id: number | string | undefined) => {
+  const viewLockRecordHandler = (
+    event: React.MouseEvent,
+    id: number | string | undefined
+  ) => {
     console.log("LOCK ID: ", id);
     router.push(`/tokens/${param.token_info_index}/${id}`);
   };
@@ -139,9 +142,9 @@ const ViewToken = () => {
         </ListCard>
         {/* Wallet Amount Cycle(d) Cycle Release(%) TGE(%) Unlock time(UTC) */}
         <Table
-          routeParams={lockRecords.map((lock: LockRecordsInfo) =>
-            Number(lock.id)
-          )}
+          routeParams={lockRecords.map((lock: LockRecordsInfo) => ({
+            index: Number(lock.id),
+          }))}
           title="Lock Records"
           className={styles.table}
           headers={[

@@ -1,4 +1,4 @@
-import { Icon } from "../utils/utility";
+import { Icon } from "../../app/(default)/tokens/utils/utility";
 
 export const ConnectWalletButton = ({
   text,

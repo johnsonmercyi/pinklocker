@@ -1,4 +1,16 @@
+import PageLoader from "../loader/Loader";
 import TableItem from "./TableItem";
+import { StaticImageData } from "next/image";
+
+export interface Transaction {
+  index: number;
+  id?: number;
+  image: StaticImageData;
+  name: string;
+  token: string;
+  symbol: string;
+  amount: string;
+}
 
 const Table = ({
   title,
@@ -7,19 +19,25 @@ const Table = ({
   clickHandler,
   className,
   routeParams,
+  loading,
 }: {
   title: string;
   headers: string[];
   transactions: any[];
   clickHandler: (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
-    id: number | string | undefined
+    index: number | string | undefined,
+    id?: number | BigInt | undefined
   ) => void;
   className?: string;
-  routeParams?: string[] | number[];
+  routeParams?: { index: number; id?: number | undefined }[];
+  loading?: boolean;
 }) => {
   return (
     <div
+      style={{
+        position: "relative",
+      }}
       className={`col-span-full xl:col-span-6 bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700 ${
         className || ""
       }`}
@@ -78,7 +96,8 @@ const Table = ({
                           clickHandler={(e) =>
                             clickHandler(
                               e,
-                              routeParams ? routeParams[index] : ""
+                              routeParams ? routeParams[index].index : "",
+                              routeParams ? routeParams[index].id : 0
                             )
                           }
                           image={transaction.image}
@@ -94,6 +113,19 @@ const Table = ({
           </div>
         </div>
       </div>
+
+      {loading ? (
+        <PageLoader
+          className="dark:bg-slate-700 dark:bg-opacity-50 bg-slate-50 bg-opacity-70"
+          style={{
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            left: 0,
+            top: 0,
+          }}
+        />
+      ) : null}
     </div>
   );
 };

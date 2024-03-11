@@ -4,14 +4,14 @@ import { StaticImageData } from "next/image";
 import { useItemSelection } from "@/components/utils/use-item-selection";
 import TransactionsTableItem from "./transactions-table-item";
 
-export interface Transaction {
-  index: number;
-  image: StaticImageData;
-  name: string;
-  token: string;
-  symbol: string;
-  amount: string;
-}
+// export interface Transaction {
+//   index: number;
+//   image: StaticImageData;
+//   name: string;
+//   token: string;
+//   symbol: string;
+//   amount: string;
+// }
 
 
 
@@ -20,7 +20,8 @@ export default function TransactionsTable({
   transactions,
 }: {
   headers: string[];
-  transactions: Transaction[];
+  // transactions: Transaction[];
+  transactions: any[];
 }) {
   const {
     selectedItems,
@@ -41,7 +42,10 @@ export default function TransactionsTable({
             <thead className="text-xs font-semibold uppercase text-slate-500 border-t border-b border-slate-200 dark:border-slate-700">
               <tr>
                 {headers.map((header, i) => (
-                  <th className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap" key={header + "_" + i}>
+                  <th
+                    className="px-2 first:pl-5 last:pr-5 py-3 whitespace-nowrap"
+                    key={header + "_" + i}
+                  >
                     <div className="font-semibold text-left">{header}</div>
                   </th>
                 ))}
