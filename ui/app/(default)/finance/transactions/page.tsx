@@ -128,7 +128,7 @@ function Transactions() {
 
             {/* Search form */}
             <div className="hidden sm:block">
-              <SearchForm />
+              {/* <SearchForm /> */}
             </div>
 
             {/* Export button */}
