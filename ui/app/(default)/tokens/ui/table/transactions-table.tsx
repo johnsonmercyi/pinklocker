@@ -4,14 +4,14 @@ import { StaticImageData } from "next/image";
 import { useItemSelection } from "@/components/utils/use-item-selection";
 import TransactionsTableItem from "./transactions-table-item";
 
-// export interface Transaction {
-//   index: number;
-//   image: StaticImageData;
-//   name: string;
-//   token: string;
-//   symbol: string;
-//   amount: string;
-// }
+export interface Transaction {
+  index: number;
+  image: StaticImageData;
+  name: string;
+  token: string;
+  symbol: string;
+  amount: string;
+}
 
 
 
