@@ -359,7 +359,7 @@ export default function Canpaigns() {
         {/* Right: Actions */}
         <div className="grid grid-flow-col sm:auto-cols-max justify-start sm:justify-end gap-2">
           {/* Search form */}
-          <SearchForm />
+          {/* <SearchForm /> */}
           {/* Filter button */}
           <FilterButton align="right" />
           {/* Create campaign button */}
