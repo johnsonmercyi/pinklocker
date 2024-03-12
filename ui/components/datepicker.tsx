@@ -5,21 +5,9 @@ import { Hook, Options } from "flatpickr/dist/types/options";
 import styles from "./datepicker-style.module.css";
 import { useDatePicker } from "@/app/(default)/tokens/context/DateProvider";
 import { useEffect, useState } from "react";
+import { secondsToDate } from "@/app/(default)/tokens/utils/utility";
 
-export default function Datepicker({ align, defaultDate }: { align?: "left" | "right", defaultDate: string}) {
-
-  const [options, setOptions] = useState<Options>({
-    mode: "single",
-    static: false,
-    monthSelectorType: "static",
-    dateFormat: "M j, Y",
-    // defaultDate: [new Date().setDate(new Date().getDate() - 6), new Date()],
-    // defaultDate: [new Date(defaultDate)],
-    prevArrow:
-      '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
-    nextArrow:
-      '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
-  });
+export default function Datepicker({ align, defaultDate }: { align?: "left" | "right", defaultDate?: number}) {
   
   const { setDateString, setSelectedDates } = useDatePicker();
   const onReady: Hook = (selectedDates, dateStr, instance) => {
@@ -36,30 +24,20 @@ export default function Datepicker({ align, defaultDate }: { align?: "left" | "r
     (instance.element as HTMLInputElement).value = dateStr.replace("to", "-");
   };
 
-  useEffect(() => {
-    console.log(defaultDate);
-    setOptions((options)=> ({
-      ...options,
-      defaultDate: [new Date(defaultDate)],
-      onReady,
-      onChange,
-    }));
-  }, [defaultDate]);
-
-  // const options3: Options = {
-  //   mode: "single",
-  //   static: false,
-  //   monthSelectorType: "static",
-  //   dateFormat: "M j, Y",
-  //   // defaultDate: [new Date().setDate(new Date().getDate() - 6), new Date()],
-  //   defaultDate: [new Date(defaultDate || "")],
-  //   prevArrow:
-  //     '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
-  //   nextArrow:
-  //     '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
-  //   onReady,
-  //   onChange,
-  // };
+  const options: Options = {
+    mode: "single",
+    static: false,
+    monthSelectorType: "static",
+    dateFormat: "M j, Y",
+    // defaultDate: [new Date().setDate(new Date().getDate() - 6), new Date()],
+    defaultDate: [defaultDate ? secondsToDate(defaultDate || 0) : new Date()],
+    prevArrow:
+      '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M5.4 10.8l1.4-1.4-4-4 4-4L5.4 0 0 5.4z" /></svg>',
+    nextArrow:
+      '<svg class="fill-current" width="7" height="11" viewBox="0 0 7 11"><path d="M1.4 10.8L0 9.4l4-4-4-4L1.4 0l5.4 5.4z" /></svg>',
+    onReady,
+    onChange,
+  };
 
   return (
     <div className={`relative`}>

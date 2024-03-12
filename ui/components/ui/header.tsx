@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useAppProvider } from "@/app/app-provider";
+import { useEffect, useState } from "react";
 
-import SearchModal from "@/components/search-modal";
-import Notifications from "@/components/dropdown-notifications";
-import DropdownHelp from "@/components/dropdown-help";
+import { ValidateWalletConnect } from "@/app/(default)/tokens/config/ValidateWalletConnection";
 import ThemeToggle from "@/components/theme-toggle";
-import DropdownProfile from "@/components/dropdown-profile";
-import { ConnectWalletButton } from "../connect-wallet-button/connect-wallet-button";
 import { useWeb3Modal, useWeb3ModalAccount } from "@web3modal/ethers/react";
-import { ValidateWalletConnect, useWallet } from "@/app/(default)/tokens/config/ValidateWalletConnection";
 import ConnectedWalletButton from "../ConnectedWalletButton/ConnectedWalletButton";
+import { ConnectWalletButton } from "../connect-wallet-button/connect-wallet-button";
 
 export default function Header() {
   const { open } = useWeb3Modal();
@@ -22,12 +18,15 @@ export default function Header() {
   const [walletConnected, setWalletConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    setWalletConnected(isConnected);
+    if (!walletConnected) {
+      setWalletConnected(isConnected);
+    }
   }, [isConnected, walletConnected]);
 
-  const connectWalletHandler = () => {
+  const connectWalletHandler = async() => {
     try {
-      open();
+      await open();
+      console.log("Clicked!");
     } catch (error) {
       console.log(error);
     }

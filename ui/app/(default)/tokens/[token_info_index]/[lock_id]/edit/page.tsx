@@ -1,29 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import ListCard from "../../../ui/listcard/ListCard";
-import ListCardItem from "../../../ui/listcard/ListCardItem";
-import styles from "./styles.module.css";
+import tokenInstance from "@/blockchain/config/ERC20";
+import pinkLockInstance from "@/blockchain/config/PinkLock";
 import Banner02 from "@/components/banner-02";
 import Datepicker from "@/components/datepicker";
-import { Icon, dateToSeconds, formatNumber, secondsToDate } from "../../../utils/utility";
-import { useDatePicker } from "../../../context/DateProvider";
-import tokenInstance from "@/blockchain/config/ERC20";
-import { useParams } from "next/navigation";
-import pinkLockInstance from "@/blockchain/config/PinkLock";
 import {
+  useWeb3Modal,
   useWeb3ModalAccount,
   useWeb3ModalProvider,
 } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
-import { Hook, Options } from "flatpickr/dist/types/options";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDatePicker } from "../../../context/DateProvider";
+import ListCard from "../../../ui/listcard/ListCard";
+import ListCardItem from "../../../ui/listcard/ListCardItem";
+import {
+  Icon,
+  dateToSeconds,
+  formatNumber,
+  secondsToDate,
+} from "../../../utils/utility";
+import styles from "./styles.module.css";
 
 type ButtonTexts = "Lock" | "Approve";
 
 const EditLock = () => {
   const param = useParams();
   const { walletProvider } = useWeb3ModalProvider();
-  const { address } = useWeb3ModalAccount();
+  const { address, isConnected } = useWeb3ModalAccount();
+  const { open, close } = useWeb3Modal();
 
   // Token Information states
   const [token, setToken] = useState<string>("");
@@ -32,7 +38,12 @@ const EditLock = () => {
   const [tokenDecimal, setTokenDecimal] = useState<number>(0);
   const [tokenBalance, setTokenBalance] = useState<string>("");
   const [lockId, setLockId] = useState<number>(0);
+  const [walletAddress, setWalletAddress] = useState<string | undefined>(
+    address
+  );
+  const [allowance, setAllowance] = useState<number>(0);
 
+  const [lockAmount, setLockAmount] = useState<string>("");
   const [amount, setAmount] = useState<string>("");
   const [amountError, setAmountError] = useState<string>("");
   const [lockDateError, setLockDateError] = useState<string>("");
@@ -44,7 +55,8 @@ const EditLock = () => {
     "success" | "error" | "warning" | undefined
   >("success");
   const [bannerMessage, setBannerMessage] = useState<string>("");
-  const { dateString, selectedDates, setDateString, setSelectedDates } = useDatePicker();
+  const { dateString, selectedDates, setDateString, setSelectedDates } =
+    useDatePicker();
   const [lockUntilDate, setLockUntilDate] = useState<number | string>(0);
 
   // For when app mounts
@@ -76,7 +88,10 @@ const EditLock = () => {
         const name = await instance.name();
         const symbol = await instance.symbol();
         const decimal = await instance.decimals();
-        const balance = await instance.balanceOf(address);
+        let balance = 0;
+        if (walletAddress) {
+          balance = await instance.balanceOf(walletAddress);
+        }
 
         // Format the balance for better readability (optional)
         const formattedBalance = ethers.formatUnits(balance, decimal);
@@ -89,6 +104,7 @@ const EditLock = () => {
         setTokenDecimal(Number(decimal));
         setTokenBalance(formatNumber(Number(formattedBalance)));
         setAmount(String(lockAmount));
+        setLockAmount(String(lockAmount));
         setDateString(lockDate.toString());
         // setApplicationReady(true);
       } else {
@@ -97,13 +113,123 @@ const EditLock = () => {
     };
 
     fetchTokenDetails();
-  }, [lockId]);
+  }, [lockId, walletAddress]);
 
-  const onSubmitHandler = (event: React.FormEvent<HTMLFormElement>) => {
+  useEffect(() => {
+    if (address) {
+      setWalletAddress(address);
+    }
+  }, [address]);
+
+  useEffect(() => {
+    const fetchTokenAllowance = async () => {
+      if (amount && walletAddress) {
+        const tokenObj = await tokenInstance(token, walletProvider || null);
+        const instance = tokenObj.instance;
+
+        let allowance = await instance.allowance(
+          walletAddress,
+          process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
+        );
+
+        allowance = Number(BigInt(allowance) / 10n ** 18n);
+        setAllowance(allowance);
+
+        console.log("Allowance: ", allowance);
+
+        if (allowance >= Number(amount)) {
+          setButtonText("Lock");
+        } else {
+          setButtonText("Approve");
+        }
+      }
+    };
+
+    fetchTokenAllowance();
+  }, [amount, walletAddress]);
+
+  useEffect(()=> {
+    if (allowance >= Number(lockAmount)) {
+      setButtonText("Lock");
+    } else {
+      setButtonText("Approve");
+    }
+  }, [allowance]);
+
+  useEffect(() => {
+    if (isConnected) {
+      setBannerMessage("");
+      setShowBanner(false);
+    }
+  }, [isConnected]);
+
+  const onSubmitHandler = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-
+    console.log("AMOUNT: ", amount);
     if (validateFields()) {
-      alert("Submitting...");
+      if (isConnected) {
+        try {
+          setShouldSubmit(true);
+          setShowBanner(false);
+          setBannerMessage("");
+
+          const pinkLocker = await pinkLockInstance(walletProvider || null);
+          const tokenObj = await tokenInstance(token, walletProvider || null);
+          const tokenInst = tokenObj.instance;
+
+          if (buttonText === "Approve") {
+            const tokenApproval = await tokenInst.approve(
+              process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS,
+              amount
+            );
+
+            const approvalReceipt = await tokenApproval.wait();
+
+            if (approvalReceipt.status === 1) {
+              const tokenAllowance = await tokenInst.allowance(
+                walletAddress,
+                process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
+              );
+
+              setAllowance(Number(BigInt(tokenAllowance) / 10n ** 18n));
+
+              setShouldSubmit(false);
+              setShowBanner(true);
+              setBannerType("success");
+              setBannerMessage(
+                `Token approval was successful. Please click the "Lock" button to update your lock!`
+              );
+            } else {
+              setShouldSubmit(false);
+              setShowBanner(true);
+              setBannerType("error");
+              setBannerMessage("Token approval failed!");
+            }
+          } else if (buttonText === "Lock") {
+
+          }
+        } catch (error: any) {
+          setShouldSubmit(false);
+          setShowBanner(true);
+          setBannerType("error");
+          setBannerMessage(error.message);
+
+          if (
+            String(error.message).includes(
+              `execution reverted: "Unlock date should be in the future"`
+            )
+          ) {
+            setBannerMessage("Unlock date should be in the future.");
+          } else if (String(error.message).includes(`user rejected action`)) {
+            setBannerMessage("Sorry! Your approval request was rejected.");
+          }
+        }
+      } else {
+        setShouldSubmit(false);
+        setShowBanner(true);
+        setBannerType("error");
+        setBannerMessage("Please kindly connect your wallet to BNB Testnet!");
+      }
     }
   };
 
@@ -130,13 +256,25 @@ const EditLock = () => {
       setAmountError("");
     }
 
+    if (Number(amount) === 0 || !Number(amount)) {
+      setAmountError("Invalid token amount.");
+    } else {
+      setAmountError("");
+    }
+
+    if (Number(amount) <= Number(lockAmount)) {
+      setAmountError("New amount must be greater than the current amount.");
+    } else {
+      setAmountError("");
+    }
+
     if (!lockUntilDate) {
       setLockDateError("Select lock until(UCT time) date");
     } else {
       setLockDateError("");
     }
 
-    return amount && lockUntilDate;
+    return Number(amount) && Number(amount) > Number(lockAmount) && lockUntilDate;
   };
 
   return (
@@ -210,7 +348,11 @@ const EditLock = () => {
                     Lock Until (UTC time){" "}
                     <span className="text-rose-500">*</span>
                   </label>
-                  <Datepicker defaultDate={dateString} />
+                  <Datepicker
+                    defaultDate={dateToSeconds(
+                      localStorage.getItem("lockedDate") || ""
+                    )}
+                  />
                 </div>
 
                 <div className={styles.buttonWrapper}>

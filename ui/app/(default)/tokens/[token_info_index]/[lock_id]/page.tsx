@@ -4,6 +4,7 @@ import tokenInstance from "@/blockchain/config/ERC20";
 import pinkLockInstance from "@/blockchain/config/PinkLock";
 import {
   Icon,
+  dateToSeconds,
   formatDate,
   secondsToDate,
 } from "@/app/(default)/tokens/utils/utility";
@@ -156,6 +157,7 @@ const ViewLocks = () => {
       } else if (action === "transfer") {
       } else if (action === "renounce") {
       } else if (action === "extend") {
+        localStorage.setItem("lockedDate", lockDate);
         router.push(`${pathname}/edit`);
       }
     };
