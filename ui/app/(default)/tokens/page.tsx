@@ -9,7 +9,7 @@ import tokenInstance from "@/blockchain/config/ERC20";
 import pinkLockInstance from "@/blockchain/config/PinkLock";
 import Image01 from "@/public/images/transactions-image-01.svg";
 import { useWeb3Modal } from "@web3modal/ethers/react";
-import { Contract } from "ethers";
+import { Contract, ethers } from "ethers";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useWallet } from "./config/ValidateWalletConnection";
@@ -59,7 +59,9 @@ export default function Page() {
 
   useEffect(() => {
     if (fetchLockType === "all") {
-      fetchLocks();
+      if (!pinkLock) {
+        fetchLocks();
+      }
     } else if (fetchLockType === "user") {
       fetchUserLocks(isConnected);
     }

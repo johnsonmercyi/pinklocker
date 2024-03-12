@@ -18,9 +18,7 @@ export default function Header() {
   const [walletConnected, setWalletConnected] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!walletConnected) {
-      setWalletConnected(isConnected);
-    }
+    setWalletConnected(isConnected);
   }, [isConnected, walletConnected]);
 
   const connectWalletHandler = async() => {

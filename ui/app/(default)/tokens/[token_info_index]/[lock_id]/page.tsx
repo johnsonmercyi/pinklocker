@@ -157,7 +157,7 @@ const ViewLocks = () => {
       } else if (action === "transfer") {
       } else if (action === "renounce") {
       } else if (action === "extend") {
-        localStorage.setItem("lockedDate", lockDate);
+        localStorage.setItem("lockedDate", lockUnlockDate);
         router.push(`${pathname}/edit`);
       }
     };

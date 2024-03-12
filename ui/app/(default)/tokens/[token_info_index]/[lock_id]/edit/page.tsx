@@ -10,7 +10,7 @@ import {
   useWeb3ModalProvider,
 } from "@web3modal/ethers/react";
 import { ethers } from "ethers";
-import { useParams } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDatePicker } from "../../../context/DateProvider";
 import ListCard from "../../../ui/listcard/ListCard";
@@ -22,11 +22,14 @@ import {
   secondsToDate,
 } from "../../../utils/utility";
 import styles from "./styles.module.css";
+import PageLoader from "../../../ui/loader/Loader";
 
-type ButtonTexts = "Lock" | "Approve";
+type ButtonTexts = "Update Lock" | "Approve";
 
 const EditLock = () => {
   const param = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { walletProvider } = useWeb3ModalProvider();
   const { address, isConnected } = useWeb3ModalAccount();
   const { open, close } = useWeb3Modal();
@@ -48,7 +51,7 @@ const EditLock = () => {
   const [amountError, setAmountError] = useState<string>("");
   const [lockDateError, setLockDateError] = useState<string>("");
   const [shouldSubmit, setShouldSubmit] = useState<boolean>(false);
-  const [buttonText, setButtonText] = useState<ButtonTexts>("Lock");
+  const [buttonText, setButtonText] = useState<ButtonTexts>("Update Lock");
 
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [bannerType, setBannerType] = useState<
@@ -57,17 +60,16 @@ const EditLock = () => {
   const [bannerMessage, setBannerMessage] = useState<string>("");
   const { dateString, selectedDates, setDateString, setSelectedDates } =
     useDatePicker();
-  const [lockUntilDate, setLockUntilDate] = useState<number | string>(0);
-
-  // For when app mounts
-  useEffect(() => {
-    setLockUntilDate(dateToSeconds(dateString || ""));
-  }, []);
+  const [lockUntilDate, setLockUntilDate] = useState<number>(
+    dateToSeconds(localStorage.getItem("lockedDate") || "")
+  );
+  const [newLockUntilDate, seNewLockUntilDate] = useState<number>(0);
+  const [applicationReady, setApplicationReady] = useState<boolean>(false);
 
   // For when date is updated
   useEffect(() => {
     if (dateString) {
-      setLockUntilDate(dateToSeconds(dateString));
+      seNewLockUntilDate(dateToSeconds(dateString));
     }
   }, [dateString]);
 
@@ -78,7 +80,7 @@ const EditLock = () => {
         const lockRecord = await pinkLock.getLockById(Number(lockId));
         const lockToken = lockRecord[1];
         const lockAmount = Number(BigInt(lockRecord[3]) / 10n ** 18n);
-        const lockDate = secondsToDate(Number(lockRecord[4]));
+        const unlockDate = Number(lockRecord[5]);
 
         // console.log("Seconds to date: ", lockDate.toString());
 
@@ -105,8 +107,8 @@ const EditLock = () => {
         setTokenBalance(formatNumber(Number(formattedBalance)));
         setAmount(String(lockAmount));
         setLockAmount(String(lockAmount));
-        setDateString(lockDate.toString());
-        // setApplicationReady(true);
+        setLockUntilDate(unlockDate);
+        setApplicationReady(true);
       } else {
         setLockId(Number(param.lock_id));
       }
@@ -138,7 +140,7 @@ const EditLock = () => {
         console.log("Allowance: ", allowance);
 
         if (allowance >= Number(amount)) {
-          setButtonText("Lock");
+          setButtonText("Update Lock");
         } else {
           setButtonText("Approve");
         }
@@ -148,9 +150,10 @@ const EditLock = () => {
     fetchTokenAllowance();
   }, [amount, walletAddress]);
 
-  useEffect(()=> {
+  useEffect(() => {
+    console.log("ALLOWANCE: ", allowance);
     if (allowance >= Number(lockAmount)) {
-      setButtonText("Lock");
+      setButtonText("Update Lock");
     } else {
       setButtonText("Approve");
     }
@@ -191,7 +194,7 @@ const EditLock = () => {
                 process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
               );
 
-              setAllowance(Number(BigInt(tokenAllowance) / 10n ** 18n));
+              setAllowance(Number(tokenAllowance));
 
               setShouldSubmit(false);
               setShowBanner(true);
@@ -205,8 +208,29 @@ const EditLock = () => {
               setBannerType("error");
               setBannerMessage("Token approval failed!");
             }
-          } else if (buttonText === "Lock") {
+          } else if (buttonText === "Update Lock") {
+            let amt = BigInt(amount);
+            amt = amt * 10n ** 18n;
+            const lockTranX = await pinkLocker.editLock(
+              BigInt(lockId),
+              amt,
+              newLockUntilDate
+            );
 
+            // Fetch lock transaction hash
+            const lockTransXHash = lockTranX.hash;
+            console.log("Lock Transaction Hash:", lockTransXHash);
+
+            setShowBanner(true);
+            setBannerType("success");
+            setBannerMessage(
+              `Lock update transaction submitted and awaiting confirmation!`
+            );
+
+            // Waiting for the transaction to be mined
+            const lockReceipt = await lockTranX.wait();
+
+            router.back();
           }
         } catch (error: any) {
           setShouldSubmit(false);
@@ -222,6 +246,14 @@ const EditLock = () => {
             setBannerMessage("Unlock date should be in the future.");
           } else if (String(error.message).includes(`user rejected action`)) {
             setBannerMessage("Sorry! Your approval request was rejected.");
+          } else if (
+            String(error.message).includes(
+              `New amount should not be less than current amount`
+            )
+          ) {
+            setBannerMessage(
+              "Sorry! New amount should not be less than current amount"
+            );
           }
         }
       } else {
@@ -274,115 +306,128 @@ const EditLock = () => {
       setLockDateError("");
     }
 
-    return Number(amount) && Number(amount) > Number(lockAmount) && lockUntilDate;
+    if (newLockUntilDate <= Date.now() / 1000) {
+      setLockDateError("New date must be in the future.");
+    } else {
+      setLockDateError("");
+    }
+
+    return (
+      Number(amount) &&
+      Number(amount) > Number(lockAmount) &&
+      lockUntilDate &&
+      newLockUntilDate > Date.now() / 1000
+    );
   };
 
   return (
     <div
       className={`relative bg-white dark:bg-slate-900 h-full ${styles.main}`}
     >
-      <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
-        {/* Page header */}
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
-            Edit Lock ✨
-          </h1>
-        </div>
+      {applicationReady ? (
+        <div className="px-4 sm:px-6 lg:px-8 py-8 w-full max-w-[96rem] mx-auto">
+          {/* Page header */}
+          <div className="mb-8">
+            <h1 className="text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-bold">
+              Edit Lock ✨
+            </h1>
+          </div>
 
-        <ListCard
-          className={styles.listCard}
-          title={"Token Info"}
-          subTitle={tokenName}
-        >
-          <ListCardItem property="Token Address" value={token} />
-          <ListCardItem property="Token Name" value={tokenName} />
-          <ListCardItem property="Token Symbol" value={tokenSymbol} />
-          <ListCardItem property="Token Decimal" value={tokenDecimal} />
-          <ListCardItem property="Token Balance" value={tokenBalance} />
-        </ListCard>
-
-        <div className="border-t border-slate-200 dark:border-slate-700">
-          {/* Form */}
-          <form
-            className="space-y-8 mt-8"
-            onSubmit={(event) => onSubmitHandler(event)}
+          <ListCard
+            className={styles.listCard}
+            title={"Token Info"}
+            subTitle={tokenName}
           >
-            {/* Amount Field */}
-            <div>
-              <div>
-                <label
-                  className="block text-sm font-medium mb-1"
-                  htmlFor="error"
-                >
-                  Amount <span className="text-rose-500">*</span>
-                </label>
-                <input
-                  name={"amount"}
-                  value={amount}
-                  id="error"
-                  className="form-input w-full"
-                  type="text"
-                  placeholder="Enter lock token amount"
-                  onChange={onChangeHandler}
-                />
-              </div>
-              <div
-                className={`text-xs mt-1 ${
-                  amountError.length ? "text-rose-500" : "text-blue-500"
-                }`}
-              >
-                {amountError.length
-                  ? amountError
-                  : "New amount must not be less than current amount"}
-              </div>
-            </div>
+            <ListCardItem property="Token Address" value={token} />
+            <ListCardItem property="Token Name" value={tokenName} />
+            <ListCardItem property="Token Symbol" value={tokenSymbol} />
+            <ListCardItem property="Token Decimal" value={tokenDecimal} />
+            <ListCardItem property="Token Balance" value={tokenBalance} />
+          </ListCard>
 
-            {/* Datepicker */}
-            <div>
-              <div className={styles.dateAndLockBtnWrapper}>
+          <div className="border-t border-slate-200 dark:border-slate-700">
+            {/* Form */}
+            <form
+              className="space-y-8 mt-8"
+              onSubmit={(event) => onSubmitHandler(event)}
+            >
+              {/* Amount Field */}
+              <div>
                 <div>
                   <label
                     className="block text-sm font-medium mb-1"
-                    htmlFor="mandatory"
+                    htmlFor="error"
                   >
-                    Lock Until (UTC time){" "}
-                    <span className="text-rose-500">*</span>
+                    Amount <span className="text-rose-500">*</span>
                   </label>
-                  <Datepicker
-                    defaultDate={dateToSeconds(
-                      localStorage.getItem("lockedDate") || ""
-                    )}
+                  <input
+                    name={"amount"}
+                    value={amount}
+                    id="error"
+                    className="form-input w-full"
+                    type="text"
+                    placeholder="Enter lock token amount"
+                    onChange={onChangeHandler}
                   />
                 </div>
-
-                <div className={styles.buttonWrapper}>
-                  <button
-                    className={`btn bg-indigo-500 hover:bg-indigo-600 text-white pt-1 pb-2 ${
-                      shouldSubmit
-                        ? "disabled:border-slate-200 dark:disabled:border-slate-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-none"
-                        : ""
-                    }`}
-                    disabled={shouldSubmit}
-                    type="submit"
-                  >
-                    {shouldSubmit ? (
-                      <Icon name="spinner" />
-                    ) : (
-                      <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
-                    )}
-                    <span className="hidden xs:block ml-2">{buttonText}</span>
-                  </button>
+                <div
+                  className={`text-xs mt-1 ${
+                    amountError.length ? "text-rose-500" : "text-blue-500"
+                  }`}
+                >
+                  {amountError.length
+                    ? amountError
+                    : "New amount must not be less than current amount"}
                 </div>
               </div>
-              <div className="text-xs mt-1 text-rose-500">{lockDateError}</div>
-            </div>
 
-            <Banner02 type={bannerType} open={showBanner}>
-              {bannerMessage}
-            </Banner02>
-          </form>
+              {/* Datepicker */}
+              <div>
+                <div className={styles.dateAndLockBtnWrapper}>
+                  <div>
+                    <label
+                      className="block text-sm font-medium mb-1"
+                      htmlFor="mandatory"
+                    >
+                      Lock Until (UTC time){" "}
+                      <span className="text-rose-500">*</span>
+                    </label>
+                    <Datepicker defaultDate={lockUntilDate} />
+                  </div>
+
+                  <div className={styles.buttonWrapper}>
+                    <button
+                      className={`btn bg-indigo-500 hover:bg-indigo-600 text-white pt-1 pb-2 ${
+                        shouldSubmit
+                          ? "disabled:border-slate-200 dark:disabled:border-slate-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-none"
+                          : ""
+                      }`}
+                      disabled={shouldSubmit}
+                      type="submit"
+                    >
+                      {shouldSubmit ? (
+                        <Icon name="spinner" />
+                      ) : (
+                        <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
+                      )}
+                      <span className="hidden xs:block ml-2">{buttonText}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="text-xs mt-1 text-rose-500">
+                  {lockDateError}
+                </div>
+              </div>
+
+              <Banner02 type={bannerType} open={showBanner}>
+                {bannerMessage}
+              </Banner02>
+            </form>
+          </div>
         </div>
-      </div>
+      ) : (
+        <PageLoader text="Loading..." />
+      )}
     </div>
   );
 };
