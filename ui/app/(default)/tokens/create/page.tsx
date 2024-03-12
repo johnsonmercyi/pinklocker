@@ -247,6 +247,8 @@ const CreateNewLock = () => {
             )
           ) {
             setBannerMessage("Unlock date should be in the future.");
+          } else if (String(error.message).includes(`user rejected action`)) {
+            setBannerMessage("Sorry! User rejected action.");
           }
         }
       } else {

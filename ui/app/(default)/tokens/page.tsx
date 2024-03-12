@@ -59,9 +59,7 @@ export default function Page() {
 
   useEffect(() => {
     if (fetchLockType === "all") {
-      if (!pinkLock) {
-        fetchLocks();
-      }
+      fetchLocks();
     } else if (fetchLockType === "user") {
       fetchUserLocks(isConnected);
     }
@@ -69,6 +67,8 @@ export default function Page() {
 
   useEffect(() => {
     if (searchText.trim().length === 0) {
+      setStartIndex(0);
+      setEndIndex(0);
       if (fetchLockType === "all") {
         setTableLoading(true);
         fetchLocks();
@@ -164,7 +164,11 @@ export default function Page() {
     }
   };
 
-  const updateForDataFetch = (page:number, startIndex: number, endIndex: number) => {
+  const updateForDataFetch = (
+    page: number,
+    startIndex: number,
+    endIndex: number
+  ) => {
     setPage(page);
     setStartIndex(startIndex);
     setEndIndex(endIndex);
@@ -205,6 +209,7 @@ export default function Page() {
     } else {
       const startIndex = page * PAGE_SIZE;
       const endIndex = (page + 1) * PAGE_SIZE - 1;
+      console.log(startIndex, endIndex);
       const locks = await pinkLock?.getCumulativeNormalTokenLockInfo(
         startIndex,
         endIndex
@@ -240,6 +245,7 @@ export default function Page() {
 
   const locksFetchHandler = async (type: "all" | "user") => {
     setTableLoading(true);
+    setPage(0);
     if (type === "user") {
       if (isConnected) {
         setFetchLockType(type);
