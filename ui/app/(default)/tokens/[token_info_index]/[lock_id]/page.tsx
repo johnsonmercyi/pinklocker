@@ -22,6 +22,7 @@ import CountdownTimer from "../../ui/countdown-timer/CountdownTimer";
 import PageLoader from "../../ui/loader/Loader";
 import Banner02 from "@/components/banner-02";
 import ModalBlank from "@/components/modal-blank";
+import ModalAction from "@/components/modal-action";
 
 type ButtonActions = "unlock" | "transfer" | "extend" | "renounce";
 type BannerTypes = "success" | "error" | "warning" | undefined;
@@ -170,6 +171,7 @@ const ViewLocks = () => {
           }
         }
       } else if (action === "transfer") {
+        setTransferOwnershipDialogOpen(true);
       } else if (action === "renounce") {
         setRenounceOwnershipDialogOpen(true);
       } else if (action === "extend") {
@@ -181,14 +183,16 @@ const ViewLocks = () => {
     executeAction();
   }, [action]);
 
-  useEffect(()=> {
-    const doRenounceOwnership = async() => {
+  useEffect(() => {
+    const doRenounceOwnership = async () => {
       const pinkLock = await pinkLockInstance(walletProvider || null);
       const renounceTrnX = await pinkLock.renounceLockOwnership(lockId);
 
       setShowBanner(true);
       setBannerType("success");
-      setBannerMessage(`You have successfully renounced the ownership of this lock!`);
+      setBannerMessage(
+        `You have successfully renounced the ownership of this lock!`
+      );
       setRenounceOwnershipDialogOpen(false);
       setLockOwner("0x0000000000000000000000000000000000000000");
 
@@ -196,7 +200,7 @@ const ViewLocks = () => {
       const lockReceipt = await renounceTrnX.wait();
 
       router.back();
-    }
+    };
 
     if (renounce && isConnected && lockId) {
       doRenounceOwnership();
@@ -233,7 +237,6 @@ const ViewLocks = () => {
             </h1>
           </div>
 
-          {/* ⚠️ Put a countdown timer here firstly */}
           <CountdownTimer
             targetTimestamp={lockUnlockDateInSeconds}
             title="Unlock in"
@@ -357,7 +360,7 @@ const ViewLocks = () => {
         <PageLoader text="Loading..." />
       )}
       <>
-        {/* Modal Dialog */}
+        {/* Renounce Ownership Modal Dialog */}
         <ModalBlank
           isOpen={renounceOwnershipDialogOpen}
           setIsOpen={setRenounceOwnershipDialogOpen}
@@ -416,6 +419,61 @@ const ViewLocks = () => {
             </div>
           </div>
         </ModalBlank>
+
+        {/* Transfer Ownership Modal Dialog */}
+        <ModalAction
+          isOpen={transferOwnershipDialogOpen}
+          setIsOpen={setTransferOwnershipDialogOpen}
+        >
+          {/* Modal header */}
+          <div className="mb-2 text-center">
+            {/* Icon */}
+            <div className="mb-3">
+              <svg
+                className="inline-flex w-12 h-12 rounded-full shrink-0 fill-current"
+                viewBox="0 0 48 48"
+              >
+                <rect
+                  className="text-indigo-100 dark:text-indigo-500/30"
+                  width="48"
+                  height="48"
+                  rx="24"
+                />
+                <path
+                  className="text-indigo-300"
+                  d="M19 16h7a8 8 0 110 16h-7V16z"
+                />
+                <path className="text-indigo-500" d="M26 24l-7-6v5h-8v2h8v5z" />
+              </svg>
+            </div>
+            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+              Transfer Lock Ownership
+            </div>
+          </div>
+          {/* Modal content */}
+          <div className="text-center">
+            {/* Submit form */}
+            <div className="text-sm mb-3 50-width text-left pl-8">New Owner Address</div>
+            <form className="flex max-w-sm m-auto">
+              <div className="grow mr-2">
+                <input
+                  id="subscribe-form"
+                  className="form-input w-full px-2 py-1"
+                  type="email"
+                />
+              </div>
+              <button
+                type="submit"
+                className="btn-sm bg-indigo-500 hover:bg-indigo-600 text-white whitespace-nowrap"
+              >
+                Transfer!
+              </button>
+            </form>
+            <div className="text-xs text-yellow-300 italic mt-3">
+              ⚠️ This would mean you're no longer the owner of this lock henceforth.
+            </div>
+          </div>
+        </ModalAction>
       </>
     </div>
   );
