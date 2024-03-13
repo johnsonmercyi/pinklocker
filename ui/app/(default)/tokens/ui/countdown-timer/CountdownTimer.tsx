@@ -88,7 +88,7 @@ const CountdownTimer: React.FC<Props> = ({
           <div className={styles.timersWrapper}>
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 bg-white ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {days.toString().padStart(2, "0")}
               </span>
@@ -96,7 +96,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {hours.toString().padStart(2, "0")}
               </span>
@@ -104,7 +104,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {minutes.toString().padStart(2, "0")}
               </span>
@@ -112,7 +112,7 @@ const CountdownTimer: React.FC<Props> = ({
 
             <div className={styles.timeWrapper}>
               <span
-                className={`px-2 py-1 ${expiredClasses} bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
+                className={`px-2 py-1 ${expiredClasses} text-slate-800 dark:text-slate-100 rounded-sm text-center shadow-lg border border-slate-200 dark:border-slate-700`}
               >
                 {seconds.toString().padStart(2, "0")}
               </span>

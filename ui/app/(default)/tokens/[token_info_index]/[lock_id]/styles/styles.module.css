@@ -9,15 +9,18 @@
 
 .wrapper,
 .buttonContainer {
-  width : 100%;
+  width          : 100%;
   display        : flex;
   justify-content: center;
   align-items    : center;
 }
 
 .banner {
-  width: 100% !important;
-  padding: 0.5rem 2rem;
+  width                    : 100% !important;
+  padding                  : 0.5rem 2rem;
+  border-top               : none !important;
+  border-start-start-radius: 0;
+  padding-bottom: 2rem !important;
 }
 
 .wrapper {
@@ -27,6 +30,10 @@
 
 .buttonIcon {
   margin: 0 0.3rem;
+}
+
+.button:disabled {
+  cursor: pointer;
 }
 
 /*Devices larger than mobile phone*/

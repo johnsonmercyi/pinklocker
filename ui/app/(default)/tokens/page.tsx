@@ -525,7 +525,7 @@ function Transactions({
         />
 
         {/* Pagination */}
-        {locks.length > 0 ? (
+        {/* {locks.length > 0 ? (
           <div className="mt-8">
             <PaginationClassic
               pageSize={pageSize}
@@ -534,7 +534,7 @@ function Transactions({
               totalNumberOfItems={totalNumberOfItems}
             />
           </div>
-        ) : null}
+        ) : null} */}
       </div>
     </div>
   );

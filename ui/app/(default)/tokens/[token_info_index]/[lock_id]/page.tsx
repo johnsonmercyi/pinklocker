@@ -67,6 +67,11 @@ const ViewLocks = () => {
     loading: false,
   });
   const [renounce, setRenouce] = useState<boolean>(false);
+  const [transfer, setTransfer] = useState<boolean>(false);
+  const [transferAddress, setTransferAddress] = useState<string | "">("");
+  const [transferAddressError, setTransferAddressError] = useState<string | "">(
+    ""
+  );
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [bannerType, setBannerType] = useState<BannerTypes>("success");
   const [bannerMessage, setBannerMessage] = useState<string>("");
@@ -184,6 +189,11 @@ const ViewLocks = () => {
   }, [action]);
 
   useEffect(() => {
+    setAction("");
+    setTransferOwnershipDialogOpen(false);
+  }, [address]);
+
+  useEffect(() => {
     const doRenounceOwnership = async () => {
       const pinkLock = await pinkLockInstance(walletProvider || null);
       const renounceTrnX = await pinkLock.renounceLockOwnership(lockId);
@@ -207,6 +217,51 @@ const ViewLocks = () => {
     }
   }, [renounce, isConnected, lockId]);
 
+  useEffect(() => {
+    const doTransferOwnership = async () => {
+      try {
+        const address = transferAddress.trim();
+        if (address.length > 0 && address.length === 42) {
+          setTransferAddressError("");
+          const pinkLock = await pinkLockInstance(walletProvider || null);
+          const transferTrnX = await pinkLock.transferLockOwnership(
+            lockId,
+            address
+          );
+
+          setShowBanner(true);
+          setBannerType("success");
+          setBannerMessage(
+            `You have successfully transfered your ownership of this lock to the address: ${address}!`
+          );
+          setTransferOwnershipDialogOpen(false);
+          setLockOwner(address);
+
+          // Waiting for the transaction to be mined
+          const lockReceipt = await transferTrnX.wait();
+
+          router.back();
+        } else {
+          setTransferAddressError("Please enter a valid new owner address");
+          setTransfer(false);
+        }
+      } catch (error: any) {
+        setTransfer(false);
+        setShowBanner(true);
+        setBannerType("error");
+        setBannerMessage(error.message);
+
+        if (String(error.message).includes("user rejected action")) {
+          setBannerMessage("Sorry! User rejected action.");
+        }
+      }
+    };
+
+    if (transfer && isConnected && lockId) {
+      doTransferOwnership();
+    }
+  }, [transfer, isConnected, lockId]);
+
   const buttonClickHandler = (
     event: React.MouseEvent<HTMLButtonElement>,
     name: ButtonActions
@@ -220,6 +275,12 @@ const ViewLocks = () => {
     setShowBanner(false);
     setBannerType("success");
     setBannerMessage("");
+  };
+
+  const transferAddressOnChangeHandler = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setTransferAddress(event.target.value);
   };
 
   const buttonStyleClasses = `shadow-lg m-1 inline-flex items-center justify-center text-sm font-medium leading-5 rounded px-3 py-1 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 duration-150 ease-in-out`;
@@ -257,7 +318,14 @@ const ViewLocks = () => {
             style={{
               borderBottom: "none",
               marginBottom: "0",
-              borderEndEndRadius: "0",
+              borderBottomLeftRadius:
+                (isConnected && address === lockOwner) || showBanner
+                  ? "0"
+                  : "3px",
+              borderBottomRightRadius:
+                (isConnected && address === lockOwner) || showBanner
+                  ? "0"
+                  : "3px",
             }}
             className={`${styles.listCard}`}
             title={"Lock Info"}
@@ -285,7 +353,10 @@ const ViewLocks = () => {
             <div
               style={{
                 borderTop: "none",
-                borderStartStartRadius: "0",
+                borderBottom: showBanner ? "none" : "",
+                borderRadius: "0 0",
+                borderBottomLeftRadius: showBanner ? "0" : "3px",
+                borderBottomRightRadius: showBanner ? "0" : "3px",
               }}
               className={`${styles.wrapper} pt-4 pb-8 col-span-full xl:col-span-6 bg-white dark:bg-slate-800 shadow-lg rounded-sm border border-slate-200 dark:border-slate-700`}
             >
@@ -344,17 +415,17 @@ const ViewLocks = () => {
                   Unlock
                 </button>
               </div>
-
-              {/* Message Banner */}
-              <Banner02
-                type={bannerType}
-                open={showBanner}
-                className={styles.banner}
-              >
-                {bannerMessage}
-              </Banner02>
             </div>
           ) : null}
+
+          {/* Message Banner */}
+          <Banner02
+            type={bannerType}
+            open={showBanner}
+            className={`${styles.banner} bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-sm border border-slate-200 dark:border-slate-700`}
+          >
+            {bannerMessage}
+          </Banner02>
         </div>
       ) : (
         <PageLoader text="Loading..." />
@@ -446,32 +517,62 @@ const ViewLocks = () => {
                 <path className="text-indigo-500" d="M26 24l-7-6v5h-8v2h8v5z" />
               </svg>
             </div>
-            <div className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            <div className="text-lg mb-6 font-semibold text-slate-800 dark:text-slate-100">
               Transfer Lock Ownership
             </div>
           </div>
           {/* Modal content */}
           <div className="text-center">
             {/* Submit form */}
-            <div className="text-sm mb-3 50-width text-left pl-8">New Owner Address</div>
-            <form className="flex max-w-sm m-auto">
-              <div className="grow mr-2">
+            <div className="text-sm mb-1 50-width text-left pl-10 pr-10">
+              New Owner Address <span className="text-rose-500">*</span>
+            </div>
+            <form className="flex flex-col max-w-sm m-auto">
+              <div className="grow flex flex-col">
                 <input
+                  onChange={transferAddressOnChangeHandler}
+                  value={transferAddress}
                   id="subscribe-form"
                   className="form-input w-full px-2 py-1"
-                  type="email"
+                  type="text"
+                  placeholder="Enter new owner wallet address"
                 />
+                <div className="text-xs text-left mt-1 text-rose-500">
+                  {transferAddressError}
+                </div>
               </div>
-              <button
-                type="submit"
-                className="btn-sm bg-indigo-500 hover:bg-indigo-600 text-white whitespace-nowrap"
-              >
-                Transfer!
-              </button>
+              <div className="text-xs text-left text-yellow-300 italic mt-1 mb-4">
+                ⚠️ You'll no longer be the owner of this lock henceforth.
+              </div>
+
+              <div className="flex flex-wrap justify-end space-x-2">
+                <button
+                  className="btn-sm border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setAction("");
+                    setTransferAddressError("");
+                    setTransferOwnershipDialogOpen(false);
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  disabled={transfer}
+                  className="btn-sm bg-indigo-500 hover:bg-indigo-600 text-white"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    setAction("");
+                    setTransfer(true);
+                  }}
+                >
+                  {transfer ? (
+                    <Icon className={styles.buttonIcon} name="spinner" />
+                  ) : null}
+                  Transfer!
+                </button>
+              </div>
             </form>
-            <div className="text-xs text-yellow-300 italic mt-3">
-              ⚠️ This would mean you're no longer the owner of this lock henceforth.
-            </div>
           </div>
         </ModalAction>
       </>
