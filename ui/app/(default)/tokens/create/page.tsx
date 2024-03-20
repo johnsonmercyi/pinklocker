@@ -218,7 +218,7 @@ const CreateNewLock = () => {
               setShouldSubmit(false);
               setShowBanner(true);
               setBannerType("error");
-              setBannerMessage("Sorry! Your wallet balance is too low.");
+              setBannerMessage("Sorry! Your balance is too low for this transaction.");
             } else {
               const lockTransX = await pinkLocker.lock(
                 owner,
