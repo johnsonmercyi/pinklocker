@@ -14,6 +14,7 @@ import {
 import pinkLockInstance from "@/blockchain/config/PinkLock";
 import { useRouter } from "next/navigation";
 import tokenInstance from "@/blockchain/config/ERC20";
+import { ethers } from "ethers";
 
 interface Fields {
   tokenAddress: string;
@@ -83,14 +84,14 @@ const CreateNewLock = () => {
     setBannerType(bannerType);
   }, [bannerType]);
 
-  useEffect(()=> {
+  useEffect(() => {
     if (!isConnected) {
       open();
     }
   }, [isConnected]);
 
   useEffect(() => {
-    const checkContractAllowance = async() => {
+    const checkContractAllowance = async () => {
       if (fields.tokenAddress && fields.amount) {
         if (walletProvider) {
           const tokenObj = await tokenInstance(
@@ -106,16 +107,14 @@ const CreateNewLock = () => {
           );
 
           setAllowance(Number(BigInt(tokenAllowance) / 10n ** 18n));
-          
         }
       }
-    }
+    };
 
     checkContractAllowance();
-
   }, [fields.tokenAddress, fields.amount, isConnected]);
 
-  useEffect(()=> {
+  useEffect(() => {
     console.log("Allowance changed: ", allowance);
     if (allowance >= Number(fields.amount)) {
       setButtonText("Lock");
@@ -173,14 +172,14 @@ const CreateNewLock = () => {
           const description = fields.lockTitle;
 
           const pinkLocker = await pinkLockInstance(walletProvider);
-          
+
           const tokenObj = await tokenInstance(
             fields.tokenAddress,
             walletProvider
           );
 
           const tokenInst = tokenObj.instance;
-          
+
           if (buttonText === "Approve") {
             const tokenApproval = await tokenInst.approve(
               process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS,
@@ -190,7 +189,6 @@ const CreateNewLock = () => {
             const approvalReceipt = await tokenApproval.wait();
 
             if (approvalReceipt.status === 1) {
-
               const tokenAllowance = await tokenInst.allowance(
                 ownerAddress,
                 process.env.NEXT_PUBLIC_PINKLOCK_ADDRESS
@@ -201,40 +199,52 @@ const CreateNewLock = () => {
               setShouldSubmit(false);
               setShowBanner(true);
               setBannerType("success");
-              setBannerMessage(`Token approval was successfully. Please click the "Lock" button to create new lock!`);
+              setBannerMessage(
+                `Token approval was successfully. Please click the "Lock" button to create new lock!`
+              );
             } else {
               setShouldSubmit(false);
               setShowBanner(true);
               setBannerType("error");
               setBannerMessage("Token approval failed!");
             }
-
           } else {
-            const lockTransX = await pinkLocker.lock(
-              owner,
-              token,
-              isLpToken,
-              amount,
-              unlockDate,
-              description
-            );
+            const decimal = await tokenInst.decimals();
+            let balance = await tokenInst.balanceOf(address);
+            const formattedBalance = ethers.formatUnits(balance, decimal);
+            balance = Number(formattedBalance);
 
-            // Fetch lock transaction hash
-            const lockTransXHash = lockTransX.hash;
-            console.log("Lock Transaction Hash:", lockTransXHash);
+            if (balance < Number(ethers.formatUnits(amount, decimal))) {
+              setShouldSubmit(false);
+              setShowBanner(true);
+              setBannerType("error");
+              setBannerMessage("Sorry! Your wallet balance is too low.");
+            } else {
+              const lockTransX = await pinkLocker.lock(
+                owner,
+                token,
+                isLpToken,
+                amount,
+                unlockDate,
+                description
+              );
 
-            setShowBanner(true);
-            setBannerType("success");
-            setBannerMessage(
-              `Lock transaction submitted and awaiting confirmation!`
-            );
+              // Fetch lock transaction hash
+              const lockTransXHash = lockTransX.hash;
+              console.log("Lock Transaction Hash:", lockTransXHash);
 
-            // Waiting for the transaction to be mined
-            const lockReceipt = await lockTransX.wait();
+              setShowBanner(true);
+              setBannerType("success");
+              setBannerMessage(
+                `Lock transaction submitted and awaiting confirmation!`
+              );
 
-            router.push(`/tokens`);
+              // Waiting for the transaction to be mined
+              const lockReceipt = await lockTransX.wait();
+
+              router.push(`/tokens`);
+            }
           }
-
         } catch (error: any) {
           setShouldSubmit(false);
           setShowBanner(true);
