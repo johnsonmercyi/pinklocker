@@ -42,7 +42,7 @@ export default function Datepicker({ align, defaultDate }: { align?: "left" | "r
   return (
     <div className={`relative`}>
       <Flatpickr
-        className={`form-input flex-1 pl-9 dark:bg-slate-800 text-slate-500 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-200 font-medium`}
+        className={`form-input w-full pl-9 dark:bg-slate-800 text-slate-500 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-200 font-medium`}
         options={options}
       />
       <div className="absolute inset-0 right-auto flex items-center pointer-events-none">

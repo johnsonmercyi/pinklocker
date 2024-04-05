@@ -4,17 +4,35 @@
 .dateAndLockBtnWrapper {
   width: 100%;
 
-  display: flex;
+  display        : flex;
   justify-content: flex-start;
-  align-items: flex-end;
+  align-items    : flex-end;
 }
 
 .buttonWrapper {
-  width: 100%;
+  width  : 100%;
   padding: 0 1rem;
 }
 
+/* .vestingFieldWrapper {
+  width          : 100%;
+  display        : flex;
+  flex-direction : column;
+  justify-content: center;
+  align-items    : center;
+}
+
+.vestingFieldWrapper>div {
+  width: 100%;
+} */
+
 /*Devices larger than mobile phone*/
 @media (min-width: 576px) {
-
+  /* .vestingFieldWrapper {
+    width          : 100%;
+    display        : flex;
+    flex-direction : row;
+    justify-content: center;
+    align-items    : center;
+  } */
 }

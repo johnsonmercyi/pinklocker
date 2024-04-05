@@ -21,15 +21,22 @@ interface Fields {
   anotherOwner: string;
   lockTitle: string;
   amount: string;
+  tgePercentage: string;
+  cycleMinutes: string;
+  cyclePercentage: string;
 }
 
 const CreateNewLock = () => {
   const [useAnotherOwner, setUseAnotherOwner] = useState<boolean>(false);
+  const [useVesting, setUseVesting] = useState<boolean>(false);
   const [fields, setFields] = useState<Fields>({
     amount: "",
     anotherOwner: "",
     lockTitle: "",
     tokenAddress: "",
+    tgePercentage: "",
+    cycleMinutes: "",
+    cyclePercentage: "",
   });
 
   const [fieldError, setFieldError] = useState<{
@@ -37,15 +44,24 @@ const CreateNewLock = () => {
     anotherOwner: string;
     tokenAddress: string;
     lockDate: string;
+    tgeDate: string;
+    tgePercentage: string;
+    cycleMinutes: string;
+    cyclePercentage: string;
   }>({
     amount: "",
     anotherOwner: "",
     tokenAddress: "",
     lockDate: "",
+    tgeDate: "",
+    tgePercentage: "",
+    cycleMinutes: "",
+    cyclePercentage: "",
   });
 
   const { dateString, selectedDates } = useDatePicker();
   const [lockUntilDate, setLockUntilDate] = useState<number>(0);
+  const [tgeDate, setTgeDate] = useState<number>(0);
   const [ownerAddress, setOwnerAddress] = useState<string>("");
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [bannerType, setBannerType] = useState<
@@ -153,6 +169,10 @@ const CreateNewLock = () => {
     setUseAnotherOwner((oldState) => !oldState);
   };
 
+  const useVestingHandler = () => {
+    setUseVesting((oldState) => !oldState);
+  };
+
   const onSubmitHandler = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -218,7 +238,9 @@ const CreateNewLock = () => {
               setShouldSubmit(false);
               setShowBanner(true);
               setBannerType("error");
-              setBannerMessage("Sorry! Your balance is too low for this transaction.");
+              setBannerMessage(
+                "Sorry! Your balance is too low for this transaction."
+              );
             } else {
               const lockTransX = await pinkLocker.lock(
                 owner,
@@ -311,6 +333,56 @@ const CreateNewLock = () => {
       }
     }
 
+    if (useVesting) {
+      if (!tgeDate) {
+        setFieldError((fields) => ({
+          ...fields,
+          tgeDate: "Select TGE date",
+        }));
+      } else {
+        setFieldError((fields) => ({
+          ...fields,
+          tgeDate: "",
+        }));
+      }
+
+      if (!fields.tgePercentage) {
+        setFieldError((fields) => ({
+          ...fields,
+          tgePercentage: "Enter TGE percentage",
+        }));
+      } else {
+        setFieldError((fields) => ({
+          ...fields,
+          tgePercentage: "",
+        }));
+      }
+
+      if (!fields.cycleMinutes) {
+        setFieldError((fields) => ({
+          ...fields,
+          cycleMinutes: "Enter cycle minutes",
+        }));
+      } else {
+        setFieldError((fields) => ({
+          ...fields,
+          cycleMinutes: "",
+        }));
+      }
+
+      if (!fields.cyclePercentage) {
+        setFieldError((fields) => ({
+          ...fields,
+          cyclePercentage: "Enter cycle percentage",
+        }));
+      } else {
+        setFieldError((fields) => ({
+          ...fields,
+          cyclePercentage: "",
+        }));
+      }
+    }
+
     if (!fields.amount) {
       setFieldError((fields) => ({
         ...fields,
@@ -336,21 +408,49 @@ const CreateNewLock = () => {
     }
 
     if (useAnotherOwner) {
-      return (
-        fields.tokenAddress &&
-        fields.tokenAddress.length === 42 &&
-        fields.anotherOwner &&
-        fields.anotherOwner.length === 42 &&
-        fields.amount &&
-        lockUntilDate
-      );
+      if (useVesting) {
+        return (
+          fields.tokenAddress &&
+          fields.tokenAddress.length === 42 &&
+          fields.anotherOwner &&
+          fields.anotherOwner.length === 42 &&
+          fields.amount &&
+          tgeDate &&
+          fields.tgePercentage &&
+          fields.cycleMinutes &&
+          fields.cyclePercentage &&
+          lockUntilDate
+        );
+      } else {
+        return (
+          fields.tokenAddress &&
+          fields.tokenAddress.length === 42 &&
+          fields.anotherOwner &&
+          fields.anotherOwner.length === 42 &&
+          fields.amount &&
+          lockUntilDate
+        );
+      }
     } else {
-      return (
-        fields.tokenAddress &&
-        fields.tokenAddress.length === 42 &&
-        fields.amount &&
-        lockUntilDate
-      );
+      if (useVesting) {
+        return (
+          fields.tokenAddress &&
+          fields.tokenAddress.length === 42 &&
+          fields.amount &&
+          tgeDate &&
+          fields.tgePercentage &&
+          fields.cycleMinutes &&
+          fields.cyclePercentage &&
+          lockUntilDate
+        );
+      } else {
+        return (
+          fields.tokenAddress &&
+          fields.tokenAddress.length === 42 &&
+          fields.amount &&
+          lockUntilDate
+        );
+      }
     }
   };
 
@@ -477,10 +577,112 @@ const CreateNewLock = () => {
               </div>
             </div>
 
+            {/* Use vesting Checkbox */}
+            <label
+              className="flex items-center"
+              style={{ width: "fit-content" }}
+            >
+              <input
+                type="checkbox"
+                className="form-checkbox"
+                defaultChecked={useVesting}
+                onChange={useVestingHandler}
+              />
+              <span className="text-sm ml-2">Use vesting?</span>
+            </label>
+
+            {useVesting ? (
+              <>
+                <div className={`flex flex-col space-x-0 space-y-6`}>
+                  {/* TGE Date */}
+                  <div className={`w-full`}>
+                    <label
+                      className="block text-sm font-medium mb-1"
+                      htmlFor="default"
+                    >
+                      TGE Date (UTC)
+                    </label>
+                    <Datepicker />
+                    <div className="text-xs mt-1 text-rose-500">
+                      {fieldError.tgeDate}
+                    </div>
+                  </div>
+
+                  {/* TGE Percent */}
+                  <div className={`w-full`}>
+                    <label
+                      className="block text-sm font-medium mb-1"
+                      htmlFor="default"
+                    >
+                      TGE Percentage
+                    </label>
+                    <input
+                      name={"tgePercentage"}
+                      value={fields.tgePercentage}
+                      id="default"
+                      className="form-input w-full"
+                      type="text"
+                      placeholder="Enter TGE percentage"
+                      onChange={onChangeHandler}
+                    />
+                    <div className="text-xs mt-1 text-rose-500">
+                      {fieldError.tgePercentage}
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`flex flex-col space-x-0 space-y-6`}>
+                  {/* Cycle Minutes */}
+                  <div className={`w-full`}>
+                    <label
+                      className="block text-sm font-medium mb-1"
+                      htmlFor="default"
+                    >
+                      Cycle Minutes
+                    </label>
+                    <input
+                      name={"cycleMinutes"}
+                      value={fields.cycleMinutes}
+                      id="default"
+                      className="form-input w-full"
+                      type="text"
+                      placeholder="Enter cycle minutes"
+                      onChange={onChangeHandler}
+                    />
+                    <div className="text-xs mt-1 text-rose-500">
+                      {fieldError.cycleMinutes}
+                    </div>
+                  </div>
+
+                  {/* Cycle Percentage */}
+                  <div className={`w-full`}>
+                    <label
+                      className="block text-sm font-medium mb-1"
+                      htmlFor="default"
+                    >
+                      Cycle Percentage
+                    </label>
+                    <input
+                      name={"cyclePercentage"}
+                      value={fields.cyclePercentage}
+                      id="default"
+                      className="form-input w-full"
+                      type="text"
+                      placeholder="Enter cycle percentage"
+                      onChange={onChangeHandler}
+                    />
+                    <div className="text-xs mt-1 text-rose-500">
+                      {fieldError.cyclePercentage}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
+
             {/* Datepicker */}
             <div>
-              <div className={styles.dateAndLockBtnWrapper}>
-                <div>
+              <div>
+                <div className="w-full mb-7">
                   <label
                     className="block text-sm font-medium mb-1"
                     htmlFor="mandatory"
@@ -489,9 +691,12 @@ const CreateNewLock = () => {
                     <span className="text-rose-500">*</span>
                   </label>
                   <Datepicker />
+                  <div className="text-xs mt-1 text-rose-500">
+                    {fieldError.lockDate}
+                  </div>
                 </div>
 
-                <div className={styles.buttonWrapper}>
+                <div className={`w-full`}>
                   <button
                     className={`btn bg-indigo-500 hover:bg-indigo-600 text-white ${
                       shouldSubmit
@@ -509,9 +714,6 @@ const CreateNewLock = () => {
                     <span className="hidden xs:block ml-2">{buttonText}</span>
                   </button>
                 </div>
-              </div>
-              <div className="text-xs mt-1 text-rose-500">
-                {fieldError.lockDate}
               </div>
             </div>
 
