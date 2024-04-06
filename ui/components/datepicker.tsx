@@ -7,12 +7,23 @@ import { useDatePicker } from "@/app/(default)/tokens/context/DateProvider";
 import { useEffect, useState } from "react";
 import { secondsToDate } from "@/app/(default)/tokens/utils/utility";
 
-export default function Datepicker({ align, defaultDate }: { align?: "left" | "right", defaultDate?: number}) {
-  
-  const { setDateString, setSelectedDates } = useDatePicker();
+export default function Datepicker({
+  align,
+  defaultDate,
+  setDateString,
+  setSelectedDates,
+}: {
+  align?: "left" | "right";
+  defaultDate?: number;
+  setDateString: (dateString: string) => void;
+  setSelectedDates?: (dates: Date[]) => void | undefined;
+}) {
+  // const { setDateString, setSelectedDates } = useDatePicker();
   const onReady: Hook = (selectedDates, dateStr, instance) => {
     setDateString(dateStr);
-    setSelectedDates(selectedDates);
+    if (setSelectedDates) {
+      setSelectedDates(selectedDates);
+    }
     (instance.element as HTMLInputElement).value = dateStr.replace("to", "-");
     const customClass = align ?? "";
     instance.calendarContainer.classList.add(`flatpickr-${customClass}`);
@@ -20,7 +31,9 @@ export default function Datepicker({ align, defaultDate }: { align?: "left" | "r
 
   const onChange: Hook = (selectedDates, dateStr, instance) => {
     setDateString(dateStr);
-    setSelectedDates(selectedDates);
+    if (setSelectedDates) {
+      setSelectedDates(selectedDates);
+    }
     (instance.element as HTMLInputElement).value = dateStr.replace("to", "-");
   };
 

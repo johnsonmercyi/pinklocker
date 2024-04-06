@@ -1,7 +1,7 @@
 "use client";
 
 import Datepicker from "@/components/datepicker";
-import { Icon, dateToSeconds } from "@/app/(default)/tokens/utils/utility";
+import { Icon, dateToSeconds, secondsToDate } from "@/app/(default)/tokens/utils/utility";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import styles from "./styles.module.css";
 import Banner02 from "@/components/banner-02";
@@ -59,7 +59,6 @@ const CreateNewLock = () => {
     cyclePercentage: "",
   });
 
-  const { dateString, selectedDates } = useDatePicker();
   const [lockUntilDate, setLockUntilDate] = useState<number>(0);
   const [tgeDate, setTgeDate] = useState<number>(0);
   const [ownerAddress, setOwnerAddress] = useState<string>("");
@@ -79,16 +78,35 @@ const CreateNewLock = () => {
   const router = useRouter();
 
   // For when app mounts
-  useEffect(() => {
-    setLockUntilDate(dateToSeconds(dateString || ""));
-  }, []);
+  // useEffect(() => {
+  //   setLockUntilDate(dateToSeconds(dateString || ""));
+  // }, []);
 
   // For when date is updated
-  useEffect(() => {
-    if (dateString) {
-      setLockUntilDate(dateToSeconds(dateString));
-    }
-  }, [dateString]);
+  // useEffect(() => {
+  //   if (lockUntilDate) {
+  //     setLockUntilDate(tgeDate);
+  //   }
+
+  //   if (tgeDate) {
+  //     setTgeDate(tgeDate);
+  //   }
+  //   console.log(
+  //     "DATES: ",
+  //     secondsToDate(tgeDate),
+  //     tgeDate,
+  //     secondsToDate(lockUntilDate),
+  //     lockUntilDate
+  //   );
+  // }, [tgeDate, lockUntilDate]);
+
+  const setTgeDateStr = (dateStr: string) => {
+    setTgeDate(dateToSeconds(dateStr));
+  }
+
+  const setLockUntilDateStr = (dateStr: string) => {
+    setLockUntilDate(dateToSeconds(dateStr));
+  };
 
   useEffect(() => {
     if (address) {
@@ -602,7 +620,7 @@ const CreateNewLock = () => {
                     >
                       TGE Date (UTC)
                     </label>
-                    <Datepicker />
+                    <Datepicker setDateString={setTgeDateStr} />
                     <div className="text-xs mt-1 text-rose-500">
                       {fieldError.tgeDate}
                     </div>
@@ -690,7 +708,7 @@ const CreateNewLock = () => {
                     Lock Until (UTC time){" "}
                     <span className="text-rose-500">*</span>
                   </label>
-                  <Datepicker />
+                  <Datepicker setDateString={setLockUntilDateStr} />
                   <div className="text-xs mt-1 text-rose-500">
                     {fieldError.lockDate}
                   </div>
