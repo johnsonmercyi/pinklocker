@@ -23,7 +23,7 @@ export default function Dashboard() {
           {/* Filter button */}
           <FilterButton align="right" />
           {/* Datepicker built with flatpickr */}
-          {/* <Datepicker align="right" /> */}
+          <Datepicker align="right" />
           {/* Add view button */}
           <button className="btn bg-indigo-500 hover:bg-indigo-600 text-white">
             <svg

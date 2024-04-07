@@ -81,7 +81,7 @@ export default function DropdownLibrary() {
             {/* Datepicker (built with flatpickr) */}
             <div>
               <h2 className="text-2xl text-slate-800 dark:text-slate-100 font-bold mb-6">Datepicker (built with <a className="underline hover:no-underline" href="https://github.com/flatpickr/flatpickr" target="_blank" rel="noreferrer">flatpickr</a>)</h2>
-              {/* <Datepicker /> */}
+              <Datepicker />
             </div>
 
           </div>

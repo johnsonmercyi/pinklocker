@@ -15,12 +15,14 @@ export default function Datepicker({
 }: {
   align?: "left" | "right";
   defaultDate?: number;
-  setDateString: (dateString: string) => void;
+  setDateString?: (dateString: string) => void;
   setSelectedDates?: (dates: Date[]) => void | undefined;
 }) {
   // const { setDateString, setSelectedDates } = useDatePicker();
   const onReady: Hook = (selectedDates, dateStr, instance) => {
-    setDateString(dateStr);
+    if (setDateString) {
+      setDateString(dateStr);
+    }
     if (setSelectedDates) {
       setSelectedDates(selectedDates);
     }
@@ -30,7 +32,9 @@ export default function Datepicker({
   };
 
   const onChange: Hook = (selectedDates, dateStr, instance) => {
-    setDateString(dateStr);
+    if (setDateString) {
+      setDateString(dateStr);
+    }
     if (setSelectedDates) {
       setSelectedDates(selectedDates);
     }
