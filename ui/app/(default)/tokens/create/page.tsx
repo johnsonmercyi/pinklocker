@@ -209,6 +209,15 @@ const CreateNewLock = () => {
           const unlockDate = lockUntilDate;
           const description = fields.lockTitle;
 
+          let tgeDt, tgeBps, cycleMin, cycleBps;
+
+          if (useVesting) {
+            tgeDt = tgeDate;
+            tgeBps = Number(fields.tgePercentage) * 100;
+            cycleMin = fields.cycleMinutes;
+            cycleBps = Number(fields.cyclePercentage) * 100;
+          }
+
           const pinkLocker = await pinkLockInstance(walletProvider);
 
           const tokenObj = await tokenInstance(
@@ -260,14 +269,29 @@ const CreateNewLock = () => {
                 "Sorry! Your balance is too low for this transaction."
               );
             } else {
-              const lockTransX = await pinkLocker.lock(
-                owner,
-                token,
-                isLpToken,
-                amount,
-                unlockDate,
-                description
-              );
+              let lockTransX;
+              if (useVesting) {
+                lockTransX = await pinkLocker.vestingLock(
+                  owner,
+                  token,
+                  isLpToken,
+                  amount,
+                  tgeDt,
+                  tgeBps,
+                  cycleMin,
+                  cycleBps,
+                  description
+                )
+              } else {
+                lockTransX = await pinkLocker.lock(
+                  owner,
+                  token,
+                  isLpToken,
+                  amount,
+                  unlockDate,
+                  description
+                );
+              }
 
               // Fetch lock transaction hash
               const lockTransXHash = lockTransX.hash;
@@ -299,6 +323,26 @@ const CreateNewLock = () => {
             setBannerMessage("Unlock date should be in the future.");
           } else if (String(error.message).includes(`user rejected action`)) {
             setBannerMessage("Sorry! User rejected action.");
+          } else if (
+            String(error.message).includes(
+              `execution reverted: "TGE date should be in the future"`
+            )
+          ) {
+            setBannerMessage("TGE date should be in the future.");
+          } else if (String(error.message).includes(`Invalid cycle`)) {
+            setBannerMessage("Invalid cycle.");
+          } else if (String(error.message).includes(`Invalid bips for TGE`)) {
+            setBannerMessage("Invalid bips for TGE.");
+          } else if (String(error.message).includes(`Invalid bips for cycle`)) {
+            setBannerMessage("Invalid bips for cycle.");
+          } else if (
+            String(error.message).includes(
+              `Sum of TGE bps and cycle should be less than 10000`
+            )
+          ) {
+            setBannerMessage(
+              "Sum of TGE bps and cycle should be less than 10000."
+            );
           }
         }
       } else {
@@ -640,7 +684,7 @@ const CreateNewLock = () => {
                       id="default"
                       className="form-input w-full"
                       type="text"
-                      placeholder="Enter TGE percentage"
+                      placeholder="E.g: 10"
                       onChange={onChangeHandler}
                     />
                     <div className="text-xs mt-1 text-rose-500">
@@ -656,7 +700,7 @@ const CreateNewLock = () => {
                       className="block text-sm font-medium mb-1"
                       htmlFor="default"
                     >
-                      Cycle Minutes
+                      Cycle (Minutes)
                     </label>
                     <input
                       name={"cycleMinutes"}
@@ -664,7 +708,7 @@ const CreateNewLock = () => {
                       id="default"
                       className="form-input w-full"
                       type="text"
-                      placeholder="Enter cycle minutes"
+                      placeholder="E.g: 10"
                       onChange={onChangeHandler}
                     />
                     <div className="text-xs mt-1 text-rose-500">
@@ -686,7 +730,7 @@ const CreateNewLock = () => {
                       id="default"
                       className="form-input w-full"
                       type="text"
-                      placeholder="Enter cycle percentage"
+                      placeholder="E.g: 10"
                       onChange={onChangeHandler}
                     />
                     <div className="text-xs mt-1 text-rose-500">
