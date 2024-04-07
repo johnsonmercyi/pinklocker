@@ -173,6 +173,12 @@ const ViewLocks = () => {
             )
           ) {
             setBannerMessage("Sorry! It is not yet time to unlock.");
+          } else if (
+            String(error.message).includes(
+              `execution reverted: "Nothing to unlock"`
+            )
+          ) {
+            setBannerMessage("Sorry! You can't unlock now.");
           }
         }
       } else if (action === "transfer") {

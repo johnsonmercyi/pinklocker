@@ -60,7 +60,6 @@ const CreateNewLock = () => {
   });
 
   const [lockUntilDate, setLockUntilDate] = useState<number>(0);
-  const [tgeDate, setTgeDate] = useState<number>(0);
   const [ownerAddress, setOwnerAddress] = useState<string>("");
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [bannerType, setBannerType] = useState<
@@ -76,33 +75,6 @@ const CreateNewLock = () => {
   const { open } = useWeb3Modal();
 
   const router = useRouter();
-
-  // For when app mounts
-  // useEffect(() => {
-  //   setLockUntilDate(dateToSeconds(dateString || ""));
-  // }, []);
-
-  // For when date is updated
-  // useEffect(() => {
-  //   if (lockUntilDate) {
-  //     setLockUntilDate(tgeDate);
-  //   }
-
-  //   if (tgeDate) {
-  //     setTgeDate(tgeDate);
-  //   }
-  //   console.log(
-  //     "DATES: ",
-  //     secondsToDate(tgeDate),
-  //     tgeDate,
-  //     secondsToDate(lockUntilDate),
-  //     lockUntilDate
-  //   );
-  // }, [tgeDate, lockUntilDate]);
-
-  const setTgeDateStr = (dateStr: string) => {
-    setTgeDate(dateToSeconds(dateStr));
-  }
 
   const setLockUntilDateStr = (dateStr: string) => {
     setLockUntilDate(dateToSeconds(dateStr));
@@ -209,10 +181,9 @@ const CreateNewLock = () => {
           const unlockDate = lockUntilDate;
           const description = fields.lockTitle;
 
-          let tgeDt, tgeBps, cycleMin, cycleBps;
+          let tgeBps, cycleMin, cycleBps;
 
           if (useVesting) {
-            tgeDt = tgeDate;
             tgeBps = Number(fields.tgePercentage) * 100;
             cycleMin = fields.cycleMinutes;
             cycleBps = Number(fields.cyclePercentage) * 100;
@@ -276,7 +247,7 @@ const CreateNewLock = () => {
                   token,
                   isLpToken,
                   amount,
-                  tgeDt,
+                  unlockDate,
                   tgeBps,
                   cycleMin,
                   cycleBps,
@@ -396,17 +367,6 @@ const CreateNewLock = () => {
     }
 
     if (useVesting) {
-      if (!tgeDate) {
-        setFieldError((fields) => ({
-          ...fields,
-          tgeDate: "Select TGE date",
-        }));
-      } else {
-        setFieldError((fields) => ({
-          ...fields,
-          tgeDate: "",
-        }));
-      }
 
       if (!fields.tgePercentage) {
         setFieldError((fields) => ({
@@ -477,7 +437,6 @@ const CreateNewLock = () => {
           fields.anotherOwner &&
           fields.anotherOwner.length === 42 &&
           fields.amount &&
-          tgeDate &&
           fields.tgePercentage &&
           fields.cycleMinutes &&
           fields.cyclePercentage &&
@@ -499,7 +458,6 @@ const CreateNewLock = () => {
           fields.tokenAddress &&
           fields.tokenAddress.length === 42 &&
           fields.amount &&
-          tgeDate &&
           fields.tgePercentage &&
           fields.cycleMinutes &&
           fields.cyclePercentage &&
@@ -653,23 +611,30 @@ const CreateNewLock = () => {
               <span className="text-sm ml-2">Use vesting?</span>
             </label>
 
+            {/* Datepicker */}
+            <div>
+              <div>
+                <div className="w-full mb-7">
+                  <label
+                    className="block text-sm font-medium mb-1"
+                    htmlFor="mandatory"
+                  >
+                    {
+                      useVesting ? "TGE Date (UTC) " : "Unlock Date "
+                    }
+                    <span className="text-rose-500">*</span>
+                  </label>
+                  <Datepicker setDateString={setLockUntilDateStr} />
+                  <div className="text-xs mt-1 text-rose-500">
+                    {fieldError.lockDate}
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {useVesting ? (
               <>
                 <div className={`flex flex-col space-x-0 space-y-6`}>
-                  {/* TGE Date */}
-                  <div className={`w-full`}>
-                    <label
-                      className="block text-sm font-medium mb-1"
-                      htmlFor="default"
-                    >
-                      TGE Date (UTC)
-                    </label>
-                    <Datepicker setDateString={setTgeDateStr} />
-                    <div className="text-xs mt-1 text-rose-500">
-                      {fieldError.tgeDate}
-                    </div>
-                  </div>
-
                   {/* TGE Percent */}
                   <div className={`w-full`}>
                     <label
@@ -741,42 +706,23 @@ const CreateNewLock = () => {
               </>
             ) : null}
 
-            {/* Datepicker */}
-            <div>
-              <div>
-                <div className="w-full mb-7">
-                  <label
-                    className="block text-sm font-medium mb-1"
-                    htmlFor="mandatory"
-                  >
-                    Lock Until (UTC time){" "}
-                    <span className="text-rose-500">*</span>
-                  </label>
-                  <Datepicker setDateString={setLockUntilDateStr} />
-                  <div className="text-xs mt-1 text-rose-500">
-                    {fieldError.lockDate}
-                  </div>
-                </div>
-
-                <div className={`w-full`}>
-                  <button
-                    className={`btn bg-indigo-500 hover:bg-indigo-600 text-white ${
-                      shouldSubmit
-                        ? "disabled:border-slate-200 dark:disabled:border-slate-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-none"
-                        : ""
-                    }`}
-                    disabled={shouldSubmit}
-                    type="submit"
-                  >
-                    {shouldSubmit ? (
-                      <Icon name="spinner" />
-                    ) : (
-                      <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
-                    )}
-                    <span className="hidden xs:block ml-2">{buttonText}</span>
-                  </button>
-                </div>
-              </div>
+            <div className={`w-full`}>
+              <button
+                className={`btn bg-indigo-500 hover:bg-indigo-600 text-white ${
+                  shouldSubmit
+                    ? "disabled:border-slate-200 dark:disabled:border-slate-700 disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed shadow-none"
+                    : ""
+                }`}
+                disabled={shouldSubmit}
+                type="submit"
+              >
+                {shouldSubmit ? (
+                  <Icon name="spinner" />
+                ) : (
+                  <Icon name="add" stroke="rgba(255, 255, 255, 0.5)" />
+                )}
+                <span className="hidden xs:block ml-2">{buttonText}</span>
+              </button>
             </div>
 
             <Banner02 type={bannerType} open={showBanner}>

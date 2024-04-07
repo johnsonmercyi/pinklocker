@@ -58,20 +58,25 @@ const EditLock = () => {
     "success" | "error" | "warning" | undefined
   >("success");
   const [bannerMessage, setBannerMessage] = useState<string>("");
-  const { dateString, selectedDates, setDateString, setSelectedDates } =
-    useDatePicker();
+  // const { dateString, selectedDates, setDateString, setSelectedDates } =
+  //   useDatePicker();
   const [lockUntilDate, setLockUntilDate] = useState<number>(
     dateToSeconds(localStorage.getItem("lockedDate") || "")
   );
-  const [newLockUntilDate, seNewLockUntilDate] = useState<number>(0);
+  const [newLockUntilDate, setNewLockUntilDate] = useState<number>(0);
   const [applicationReady, setApplicationReady] = useState<boolean>(false);
 
   // For when date is updated
-  useEffect(() => {
-    if (dateString) {
-      seNewLockUntilDate(dateToSeconds(dateString));
-    }
-  }, [dateString]);
+  // useEffect(() => {
+  //   if (dateString) {
+  //     seNewLockUntilDate(dateToSeconds(dateString));
+  //   }
+  // }, [dateString]);
+
+  const setLockUntilDateStr = (dateStr: string) => {
+    console.log("DATE: ", dateStr);
+    setNewLockUntilDate(dateToSeconds(dateStr));
+  };
 
   useEffect(() => {
     const fetchTokenDetails = async () => {
@@ -301,10 +306,18 @@ const EditLock = () => {
     }
 
     if (!lockUntilDate) {
-      setLockDateError("Select lock until(UCT time) date");
+      setLockDateError("Select Unlock date");
     } else {
       setLockDateError("");
     }
+
+    console.log(
+      "New lock date: ",
+      newLockUntilDate,
+      "Date now: ",
+      Date.now(),
+      Date.now() / 1000
+    );
 
     if (newLockUntilDate <= Date.now() / 1000) {
       setLockDateError("New date must be in the future.");
@@ -377,7 +390,7 @@ const EditLock = () => {
                 >
                   {amountError.length
                     ? amountError
-                    : "New amount must not be less than current amount"}
+                    : ""}
                 </div>
               </div>
 
@@ -389,10 +402,13 @@ const EditLock = () => {
                       className="block text-sm font-medium mb-1"
                       htmlFor="mandatory"
                     >
-                      Lock Until (UTC time){" "}
+                      Unlock Date {" "}
                       <span className="text-rose-500">*</span>
                     </label>
-                    <Datepicker defaultDate={lockUntilDate} />
+                    <Datepicker
+                      defaultDate={lockUntilDate}
+                      setDateString={setLockUntilDateStr}
+                    />
                   </div>
 
                   <div className={styles.buttonWrapper}>

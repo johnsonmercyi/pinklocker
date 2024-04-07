@@ -26,7 +26,6 @@ const ViewToken = () => {
   const { walletProvider } = useWeb3ModalProvider();
 
   const [token, setToken] = useState<string>("");
-  const [tokenInfoIndex, setTokenInfoIndex] = useState<number>(0);
   const [lockAmount, setLockAmount] = useState<number>(0);
   const [lockValue, setLockValue] = useState<number>(0);
   const [tokenName, setTokenName] = useState<string>("");
@@ -38,11 +37,13 @@ const ViewToken = () => {
 
   useEffect(() => {
     const fetchTokenDetails = async () => {
-      if (tokenInfoIndex >= 0) {
+      const index: number = Number(param.token_info_index as string);
+      console.log("LOCK INDEX: ", index, "PARAM: ", param);
+      if (index >= 0) {
         // if (walletProvider) {
         const pinkLock = await pinkLockInstance(walletProvider || null);
         const tokenInfo = await pinkLock.getCumulativeNormalTokenLockInfoAt(
-          tokenInfoIndex
+          index
         );
 
         const convertedTokenInfo: AcumulativeTokenInfo = {
@@ -55,13 +56,11 @@ const ViewToken = () => {
         setLockAmount(convertedTokenInfo.amount);
         setApplicationReady(true);
         // }
-      } else {
-        setTokenInfoIndex(Number(param.token_info_index as string));
       }
     };
 
     fetchTokenDetails();
-  }, [tokenInfoIndex, walletProvider]);
+  }, [param, walletProvider]);
 
   useEffect(() => {
     const initTokenDetails = async () => {
